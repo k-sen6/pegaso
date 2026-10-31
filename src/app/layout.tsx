@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
@@ -23,6 +24,18 @@ export const metadata: Metadata = {
   },
   description:
     "Conectamos cooperativas cubanas verificadas con compradores nacionales y financiamiento internacional.",
+  manifest: "/pegaso/manifest.json",
+  icons: {
+    icon: "/pegaso/icons/icon-192.png",
+    apple: "/pegaso/icons/icon-192.png",
+  },
+  applicationName: "Pegaso",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#070d14",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
@@ -41,6 +54,14 @@ export default function RootLayout({
             <MobileNav />
           </div>
         </Providers>
+        <Script
+          id="sw-registro"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html:
+              'if("serviceWorker" in navigator && location.protocol==="https:"||location.hostname==="localhost"){navigator.serviceWorker.register("/pegaso/sw.js").catch(function(){})}',
+          }}
+        />
       </body>
     </html>
   );

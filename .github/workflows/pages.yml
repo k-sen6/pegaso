@@ -27,6 +27,7 @@ jobs:
       - run: npm run build
         env:
           NODE_ENV: production
+      - run: node tools/generar-sw.mjs
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./out
