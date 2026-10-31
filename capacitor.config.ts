@@ -5,10 +5,9 @@ const config: CapacitorConfig = {
   appName: 'Pegaso',
   webDir: 'out',
   server: {
-    // La APK es una cascaron: carga la PWA publicada en GitHub Pages.
-    // Offline y auto-actualización se gestionan con el Service Worker del sitio.
-    url: 'https://k-sen6.github.io/pegaso/',
     androidScheme: 'https',
+    // Sin server.url: la APK carga el bundle enbargado local (100% offline).
+    // DNS de github.io no interviene; la actualización remota va por OTA (fase 2).
   },
 };
 
