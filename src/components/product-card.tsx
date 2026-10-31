@@ -13,7 +13,7 @@ function Portada({ producto, className }: { producto: Producto; className?: stri
         className
       )}
       style={{
-        background: `linear-gradient(135deg, oklch(0.75 0.09 ${producto.hue}), oklch(0.55 0.12 ${producto.hue}))`,
+        background: `linear-gradient(135deg, oklch(0.85 0.08 220), oklch(0.55 0.11 235))`,
       }}
       aria-hidden="true"
     >
