@@ -52,7 +52,7 @@ src/
     offline/            # Fallback offline (ex /~offline: prefijo reservado en Next 15.5)
   components/           # Header, Footer, MobileNav, ConnectionIndicator, tarjetas...
   components/ui/        # Primitivos de shadcn/ui
-  lib/mock/             # Datos de demostración (8 cooperativas, 37 productos, 15 cursos)
+  lib/mock/             # Datos de demostración (8 cooperativas, 38 productos, 15 cursos)
   lib/precio.ts         # Formato de precios en CUP
 ```
 
