@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { TicketIcon } from "lucide-react";
+import { TicketIcon, UploadCloud } from "lucide-react";
 import { MisReservas } from "@/components/mis-reservas";
+import { SubirFoto } from "@/components/subida-foto";
 
 export const metadata = { title: "Mi cuenta" };
 
@@ -24,6 +25,19 @@ export default function PaginaMiCuenta() {
             Volver al catálogo
           </Link>
         </p>
+      </section>
+
+      <section className="mt-10" aria-labelledby="subir">
+        <h2 id="subir" className="flex items-center gap-2 text-lg font-semibold tracking-tight">
+          <UploadCloud className="size-5 text-primary" aria-hidden="true" />
+          Subir fotos de mi producto
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Tu foto se comprime a ~150 KB en el propio teléfono y entra en cola local hasta conectar el backend.
+        </p>
+        <div className="mt-4">
+          <SubirFoto />
+        </div>
       </section>
     </div>
   );
