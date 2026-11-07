@@ -2,11 +2,10 @@ import Link from "next/link";
 import { GraduationCap, ShoppingBag, PiggyBank, ArrowRight, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
+import { DestacadosVivos } from "@/components/destacados-vivos";
 import { CoopCard, VerificacionBadge } from "@/components/coop-card";
 import {
   COOPERATIVAS,
-  PRODUCTOS_DESTACADOS,
-  cooperativaPorId,
 } from "@/lib/mock";
 
 const MODULOS = [
@@ -149,12 +148,7 @@ export default function Home() {
             Ver todo
           </Link>
         </div>
-        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {PRODUCTOS_DESTACADOS.map((producto) => {
-            const coop = cooperativaPorId(producto.cooperativaId)!;
-            return <ProductCard key={producto.id} producto={producto} cooperativa={coop} />;
-          })}
-        </div>
+        <DestacadosVivos />
       </section>
 
       {/* Cómo funciona */}

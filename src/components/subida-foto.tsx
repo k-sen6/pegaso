@@ -102,14 +102,39 @@ export const subirStore = {
     notificar();
     if (objetivo) borrarBlob(objetivo.fotoId).catch(() => {});
   },
+  marcarFallida(id: string) {
+    hidratar();
+    lista = lista.map((s) => (s.id === id ? { ...s, estado: "fallida" as const } : s));
+    persistir();
+    notificar();
+  },
 };
 
 /**
- * Punto de envío (TODO Supabase): cuando haya backend, solo cambia esto
- * para hacer fetch al endpoint oficial con auth. La cola local no cambia.
+ * Envío real a Supabase Storage: sube el blob ya comprimido y registra
+ * la fila en `fotos`. Sin backend configurado puede lanzar; la cola local
+ * nunca se pierde (el caller reintenta).
  */
-export async function enviarSubida(_subida: Subida, _blob: Blob): Promise<void> {
-  throw new Error("Backend pendiente (Supabase): la foto queda en cola local.");
+export async function enviarSubida(subida: Subida, blob: Blob): Promise<string> {
+  const { supabase } = await import("@/lib/supabase");
+  if (!supabase) throw new Error("Sin backend configurado: queda en cola local.");
+  const nombre = `${subida.id}.webp`;
+  const { error: errSubida } = await supabase.storage
+    .from("fotos")
+    .upload(nombre, blob, { contentType: "image/webp", upsert: true });
+  if (errSubida) throw errSubida;
+  const { data } = supabase.storage.from("fotos").getPublicUrl(nombre);
+  const { error: errFila } = await supabase.from("fotos").insert({
+    producto_id: null,
+    nombre_producto: subida.productoNombre,
+    url: data.publicUrl,
+    peso_bytes: subida.pesoBytes,
+    ancho: subida.ancho,
+    alto: subida.alto,
+    estado: "sincronizada",
+  });
+  if (errFila) throw errFila;
+  return data.publicUrl;
 }
 
 // ---- Componente UI ----
@@ -134,6 +159,7 @@ export function SubirFoto() {
   const [error, setError] = useState<string | null>(null);
   const [miniaturas, setMiniaturas] = useState<Record<string, string>>({});
   const [drag, setDrag] = useState(false);
+  const [subiendoId, setSubiendoId] = useState<string | null>(null);
   const inputArchivo = useRef<HTMLInputElement>(null);
   const inputCamara = useRef<HTMLInputElement>(null);
 
@@ -180,6 +206,24 @@ export function SubirFoto() {
     setVista(null);
     setBlobActual(null);
     setNombre("");
+  };
+
+  const intentar = async (subida: Subida) => {
+    setSubiendoId(subida.id);
+    setError(null);
+    try {
+      const blob = await leerBlob(subida.fotoId);
+      if (!blob) throw new Error("La foto no está en el dispositivo.");
+      await enviarSubida(subida, blob);
+      subirStore.quitar(subida.id);
+    } catch (e) {
+      setError(
+        e instanceof Error ? `${e.message} (sigue en cola)` : "No se pudo subir. Sigue en cola."
+      );
+      subirStore.marcarFallida(subida.id);
+    } finally {
+      setSubiendoId(null);
+    }
   };
 
   return (
@@ -337,6 +381,37 @@ export function SubirFoto() {
                   <Clock className="size-3" aria-hidden="true" />
                   {subida.estado === "pendiente" ? "En cola" : "Falló"}
                 </span>
+                {subida.estado === "pendiente" ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={subiendoId === subida.id}
+                    onClick={() => intentar(subida)}
+                  >
+                    {subiendoId === subida.id ? (
+                      <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                    ) : (
+                      <UploadCloud className="size-4" aria-hidden="true" />
+                    )}
+                    Subir ahora
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={subiendoId === subida.id}
+                    onClick={() => intentar(subida)}
+                  >
+                    <Loader2
+                      className="size-4 animate-spin"
+                      aria-hidden="true"
+                      data-invisible={subiendoId !== subida.id}
+                    />
+                    Reintentar
+                  </Button>
+                )}
                 <Button
                   type="button"
                   variant="ghost"

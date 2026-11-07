@@ -28,7 +28,8 @@ jobs:
         env:
           NODE_ENV: production
           NEXT_PUBLIC_BUILD: ${{ github.sha }}
-          BUILD_ID: ${{ github.sha }}
+          NEXT_PUBLIC_SUPABASE_URL: https://guptzbnzkprdrgilrdrx.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1cHR6Ym56a3ByZHJnaWxyZHJ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQwMTc0NDcsImV4cCI6MjEwOTU5MzQ0N30.-lIwFwPSCOp77QiiemTJL8PlR6fPaa3ir4-T-GnSpiE
       - run: node tools/generar-sw.mjs
       - uses: actions/upload-pages-artifact@v3
         with:

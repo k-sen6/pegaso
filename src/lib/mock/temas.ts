@@ -88,6 +88,13 @@ export const TEMA_DE_PRODUCTO: Record<string, string> = {
   p38: "panal",
 };
 
+import { PRODUCTOS } from "./productos";
+
+/** slug → tema, para filas remotas de Supabase (sin ID local pN). */
+export const TEMA_DE_SLUG: Record<string, string> = Object.fromEntries(
+  PRODUCTOS.map((p) => [p.slug, TEMA_DE_PRODUCTO[p.id] ?? "generica"])
+);
+
 /** Voice archivo base por tema (con _NOTE de coherencia: los que comparten tema comparten archivo). */
 export const TEMA_ARCHIVO: Record<string, string> = Object.fromEntries(
   TEMAS.map((t) => [t.tema, archivoDeTema(t.tema)])

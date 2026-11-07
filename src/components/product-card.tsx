@@ -4,7 +4,7 @@ import type { Producto, Cooperativa } from "@/lib/mock";
 import { formatoPrecioCup } from "@/lib/precio";
 import { cn } from "cn";
 import { PortadaOptin } from "@/components/portada-optin";
-import { TEMA_DE_PRODUCTO } from "@/lib/mock/temas";
+import { TEMA_DE_PRODUCTO, TEMA_DE_SLUG } from "@/lib/mock/temas";
 
 export function ProductCard({
   producto,
@@ -29,7 +29,7 @@ export function ProductCard({
         aria-label={`${producto.nombre}, ${formatoPrecioCup(producto.precioCup)}`}
       >
         <PortadaOptin
-          temaId={TEMA_DE_PRODUCTO[producto.id] ?? "generica"}
+          temaId={TEMA_DE_PRODUCTO[producto.id] ?? TEMA_DE_SLUG[producto.slug] ?? "generica"}
           hue={producto.hue ?? 225}
           nombre={producto.nombre}
           className="aspect-[4/3] rounded-lg"

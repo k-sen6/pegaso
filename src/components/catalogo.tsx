@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ProductCard } from "@/components/product-card";
 import { EmptyState } from "@/components/empty-state";
-import { PRODUCTOS, cooperativaPorId } from "@/lib/mock";
+import { useCatalogoVivo } from "@/lib/catalogo";
 import { NOMBRE_SECTOR, SECTORES, type Sector } from "@/lib/mock/types";
 import { cn } from "cn";
 
@@ -59,6 +59,7 @@ function GrupoEtiquetas({
 }
 
 export function Catalogo() {
+  const { productos: PRODUCTOS, cooperativas } = useCatalogoVivo();
   const [texto, setTexto] = useState("");
   const [sector, setSectorq] = useState<"todos" | Sector>("todos");
   const [provincia, setProvincia] = useState("todas");
@@ -66,14 +67,15 @@ export function Catalogo() {
   const [orden, setOrden] = useState<Orden>("relevancia");
 
   const provincias = useMemo(
-    () => Array.from(new Set(PRODUCTOS.map((p) => cooperativaPorId(p.cooperativaId)?.provincia).filter(Boolean))).sort() as string[],
-    []
+    () =>
+      Array.from(new Set(PRODUCTOS.map((p) => cooperativas.get(p.cooperativaId)?.provincia).filter(Boolean))).sort() as string[],
+    [PRODUCTOS, cooperativas]
   );
 
   const listados = useMemo(() => {
     const t = texto.trim().toLowerCase();
     const filtrados = PRODUCTOS.filter((producto) => {
-      const coop = cooperativaPorId(producto.cooperativaId);
+      const coop = cooperativas.get(producto.cooperativaId);
       if (!coop || coop.verificacion !== "verificado") return false;
       if (sector !== "todos" && producto.sector !== sector) return false;
       if (provincia !== "todas" && coop.provincia !== provincia) return false;
@@ -94,7 +96,7 @@ export function Catalogo() {
       }
     });
     return ordenados;
-  }, [texto, sector, provincia, precioMax, orden]);
+  }, [texto, sector, provincia, precioMax, orden, PRODUCTOS, cooperativas]);
 
   const hayFiltros = texto || sector !== "todos" || provincia !== "todas" || precioMax !== null || orden !== "relevancia";
 
@@ -186,7 +188,7 @@ export function Catalogo() {
       {listados.length > 0 ? (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {listados.map((producto) => {
-            const coop = cooperativaPorId(producto.cooperativaId)!;
+            const coop = cooperativas.get(producto.cooperativaId)!;
             return <ProductCard key={producto.id} producto={producto} cooperativa={coop} />;
           })}
         </div>
