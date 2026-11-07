@@ -67,21 +67,21 @@ export default async function FichaProducto({
             <BadgeCheck className="size-4 text-success" aria-hidden="true" />
             {NOMBRE_SECTOR[producto.sector]}
           </p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight">
             {producto.nombre}
           </h1>
-          <p className="mt-2 text-2xl font-bold text-primary">
+          <p className="mt-2 text-3xl font-bold tracking-tight text-primary">
             {formatoPrecioCup(producto.precioCup)}
           </p>
-          <p className="mt-3 text-sm text-muted-foreground">{producto.descripcion}</p>
+          <p className="mt-3 text-pretty text-sm leading-relaxed text-muted-foreground">{producto.descripcion}</p>
 
-          <div className="mt-4 rounded-lg border bg-card p-3 text-sm">
-            <p className="font-medium">Vendido por</p>
+          <div className="mt-4 rounded-xl border bg-card p-4 text-sm shadow-[var(--shadow-card)]">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vendido por</p>
             <Link
               href={`/cooperativas/${cooperativa.slug}`}
-              className="mt-0.5 flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
+              className="mt-1 flex items-center gap-1.5 font-medium hover:text-primary"
             >
-              <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
+              <MapPin className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
               {cooperativa.nombre} · {cooperativa.provincia}
               <VerificacionBadge verificacion={cooperativa.verificacion} className="ml-auto" />
             </Link>

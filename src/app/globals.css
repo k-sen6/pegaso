@@ -120,9 +120,30 @@
     font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
   }
+  ::selection {
+    background: oklch(0.55 0.11 235 / 0.28);
+  }
   :focus-visible {
     outline: 2px solid var(--color-ring);
     outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  /* Aparición suave solo para entrada de tarjetas (respetando reduced-motion global) */
+  .animate-fade-in {
+    animation: fade-in var(--duration-normal) var(--ease-out-quart) both;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 

@@ -1,9 +1,13 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { CircleUserRound } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { ConnectionIndicator } from "@/components/connection-indicator";
 import { ToggleTema } from "@/components/toggle-tema";
 import { ToggleImagenes } from "@/components/toggle-imagenes";
+import { cn } from "cn";
 
 const NAV = [
   { href: "/", label: "Inicio" },
@@ -14,6 +18,10 @@ const NAV = [
 ];
 
 export function Header() {
+  const pathname = usePathname() ?? "/";
+  const activa = (href: string) =>
+    href === "/" ? pathname === "/" : pathname.startsWith(href);
+
   return (
     <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/70">
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4">
@@ -25,7 +33,13 @@ export function Header() {
             <Link
               key={n.href}
               href={n.href}
-              className="rounded-md px-3 py-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              aria-current={activa(n.href) ? "page" : undefined}
+              className={cn(
+                "rounded-md px-3 py-1.5 transition-colors",
+                activa(n.href)
+                  ? "bg-primary/15 font-medium text-primary"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground",
+              )}
             >
               {n.label}
             </Link>

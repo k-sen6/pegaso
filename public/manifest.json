@@ -1,7 +1,7 @@
 {
-  "name": "Pegaso — Cooperativas, marketplace y financiamiento",
+  "name": "Pegaso — Vendedores, marketplace y financiamiento",
   "short_name": "Pegaso",
-  "description": "Plataforma para cooperativas cubanas: marketplace y financiamiento NAE. Funciona sin conexión.",
+  "description": "Plataforma para vendedores cubanos: marketplace y financiamiento NAE. Funciona sin conexión.",
   "lang": "es",
   "start_url": "/pegaso/",
   "scope": "/pegaso/",

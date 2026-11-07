@@ -30,6 +30,24 @@ const MODULOS = [
   },
 ] as const;
 
+const COMO_FUNCIONA = [
+  {
+    n: "01",
+    titulo: "Explora y reserva",
+    txt: "Busca entre productos reales, filtra por sector o provincia y reserva en 1 toque, con o sin señal.",
+  },
+  {
+    n: "02",
+    titulo: "Paga al recoger",
+    txt: "Efectivo o transferencia, directo al vendedor. Sin intermediarios: tu compra llega íntegra al negocio local.",
+  },
+  {
+    n: "03",
+    titulo: "Todo sincroniza solo",
+    txt: "Pegaso es offline-first: tus reservas y pedidos se guardan y sincronizan con el vendedor cuando vuelva la red.",
+  },
+] as const;
+
 export default function Home() {
   const verificadas = COOPERATIVAS.filter((c) => c.verificacion === "verificado");
 
@@ -94,7 +112,8 @@ export default function Home() {
 
       {/* Tres módulos */}
       <section className="mx-auto max-w-6xl px-4 py-14" aria-labelledby="modulos">
-        <h2 id="modulos" className="text-2xl font-semibold tracking-tight">Tres módulos, un solo lugar</h2>
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Plataforma</p>
+        <h2 id="modulos" className="mt-1 text-2xl font-semibold tracking-tight">Tres módulos, un solo lugar</h2>
         <div className="mt-7 grid gap-4 sm:grid-cols-3">
           {MODULOS.map(({ href, icono: Icono, titulo, txt }) => (
             <Link
@@ -120,9 +139,12 @@ export default function Home() {
       </section>
 
       {/* Productos destacados */}
-      <section className="mx-auto max-w-6xl px-4 pb-14" aria-labelledby="destacados">
+      <section className="mx-auto max-w-6xl px-4 pb-6" aria-labelledby="destacados">
         <div className="flex items-baseline justify-between gap-2">
-          <h2 id="destacados" className="text-2xl font-semibold tracking-tight">Productos destacados</h2>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Catálogo</p>
+            <h2 id="destacados" className="mt-1 text-2xl font-semibold tracking-tight">Productos destacados</h2>
+          </div>
           <Link href="/productos" className="text-sm font-medium text-primary hover:underline underline-offset-4">
             Ver todo
           </Link>
@@ -135,10 +157,31 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Cómo funciona */}
+      <section className="mx-auto max-w-6xl px-4 py-10" aria-labelledby="como">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Simple</p>
+        <h2 id="como" className="mt-1 text-2xl font-semibold tracking-tight">Cómo funciona</h2>
+        <ol className="mt-6 grid gap-4 sm:grid-cols-3">
+          {COMO_FUNCIONA.map((paso) => (
+            <li
+              key={paso.n}
+              className="rounded-xl border bg-card p-5 shadow-[var(--shadow-card)] transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40"
+            >
+              <span className="font-mono text-xs font-semibold tracking-widest text-primary">{paso.n}</span>
+              <h3 className="mt-2 font-semibold">{paso.titulo}</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{paso.txt}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
       {/* Vendedores verificados */}
       <section className="mx-auto max-w-6xl px-4 pb-14" aria-labelledby="coops">
         <div className="flex items-baseline justify-between gap-2">
-          <h2 id="coops" className="text-2xl font-semibold tracking-tight">Vendedores verificados</h2>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Directorio</p>
+            <h2 id="coops" className="mt-1 text-2xl font-semibold tracking-tight">Vendedores verificados</h2>
+          </div>
           <Link href="/cooperativas" className="text-sm font-medium text-primary hover:underline underline-offset-4">
             Ver directorio
           </Link>
