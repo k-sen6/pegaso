@@ -14,7 +14,7 @@ const MODULOS = [
     href: "/formacion",
     icono: GraduationCap,
     titulo: "Formación",
-    txt: "Cursos para crear y formalizar tu cooperativa, con guías descargables para trabajar sin red.",
+    txt: "Cursos para crear y formalizar tu vendedor cooperativo, con guías descargables para trabajar sin red.",
   },
   {
     href: "/productos",
@@ -60,7 +60,7 @@ export default function Home() {
             </span>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-pretty text-muted-foreground sm:text-lg">
-            Pegaso conecta cooperativas cubanas con compradores nacionales y
+            Pegaso conecta vendedores cubanos con compradores nacionales y
             financiamiento internacional. Funciona aunque la señal se vaya:
             tus cambios se sincronizan cuando vuelva.
           </p>
@@ -165,14 +165,14 @@ export default function Home() {
             <div className="relative flex flex-col items-center gap-4">
               <VerificacionBadge verificacion="verificado" />
               <h2 className="text-2xl font-semibold tracking-tight max-w-lg text-balance">
-                ¿Tienes una cooperativa o quieres comprar con confianza?
+                ¿Vendes o quieres comprar con confianza?
               </h2>
               <p className="max-w-md text-pretty text-sm text-muted-foreground sm:text-base">
                 Publica tus productos, gestiona tus pedidos y solicita financiamiento NAE en un solo panel.
               </p>
               <Button asChild size="lg" className="h-11 px-6">
                 <Link href="/registro" className="gap-1.5">
-                  Registrar mi cooperativa <ArrowRight />
+                  Registrar mi negocio <ArrowRight />
                 </Link>
               </Button>
             </div>

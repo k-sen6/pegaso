@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: "%s — Pegaso",
   },
   description:
-    "Conectamos cooperativas cubanas verificadas con compradores nacionales y financiamiento internacional.",
+    "Conectamos vendedores cubanos verificados con compradores nacionales y financiamiento internacional.",
   manifest: "/pegaso/manifest.json",
   icons: {
     icon: "/pegaso/icons/icon-192.png",

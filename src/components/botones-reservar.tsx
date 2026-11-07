@@ -60,9 +60,9 @@ export function BotonesReservar({ producto }: { producto: Producto }) {
               {producto.nombre} · pago en {abierto}
             </p>
             <ul className="mt-3 grid gap-1.5 text-sm text-muted-foreground">
-              <li>· Recoger y pagar directamente en la cooperativa.</li>
+              <li>· Recoger y pagar directamente en el punto de venta del vendedor.</li>
               <li>· La reserva queda guardada sin conexión en este teléfono.</li>
-              <li>· Se sincronizará con la cooperativa cuando llegues al punto de venta.</li>
+              <li>· Se sincronizará con el vendedor cuando llegues al punto de venta.</li>
             </ul>
             <div className="mt-5 flex gap-2">
               <Button variant="outline" className="flex-1" onClick={cerrar} disabled={paso === "confirmando"}>
@@ -99,7 +99,7 @@ export function BotonesReservar({ producto }: { producto: Producto }) {
             <h2 className="mt-3 font-semibold">Reserva guardada</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Código <span className="font-mono font-semibold text-foreground">{guardado}</span>. Muéstralo en la
-              cooperativa al pasar a recoger.
+              tienda del vendedor al pasar a recoger.
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
               Encuéntrala siempre en <strong className="text-foreground">Mi cuenta → Mis reservas</strong>.

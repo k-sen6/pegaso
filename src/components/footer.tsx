@@ -8,7 +8,7 @@ export function Footer() {
         <div className="sm:col-span-1">
           <p className="font-semibold tracking-tight text-foreground">Pegaso</p>
           <p className="mt-2 leading-relaxed text-muted-foreground">
-            Plataforma que conecta cooperativas cubanas verificadas con compradores y
+            Plataforma que conecta vendedores cubanos verificados con compradores y
             oportunidades de financiamiento internacional.
           </p>
           <p className="mt-4 text-xs text-muted-foreground">© 2026 Pegaso</p>

@@ -25,7 +25,7 @@ export default function PaginaFinanciamiento() {
           <PiggyBank className="size-6" aria-hidden="true" />
         </span>
         <h1 className="mt-4 text-3xl font-semibold tracking-tight">
-          Financiamiento internacional para tu cooperativa
+          Financiamiento internacional para tu iniciativa
         </h1>
         <p className="mt-3 text-muted-foreground">
           El programa <strong>NAE (Nuevos Actores Económicos)</strong> —financiado por la

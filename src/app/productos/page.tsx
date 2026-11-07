@@ -28,7 +28,7 @@ export default function PaginaProductos() {
         <EmptyState
           className="mt-6"
           titulo="Aún no hay productos"
-          mensaje="Cuando las cooperativas publiquen, los verás aquí."
+          mensaje="Cuando los vendedores publiquen sus productos, los verás aquí."
         />
       )}
     </div>
