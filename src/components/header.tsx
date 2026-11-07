@@ -8,7 +8,7 @@ import { ToggleImagenes } from "@/components/toggle-imagenes";
 const NAV = [
   { href: "/", label: "Inicio" },
   { href: "/productos", label: "Productos" },
-  { href: "/cooperativas", label: "Cooperativas" },
+  { href: "/cooperativas", label: "Vendedores" },
   { href: "/formacion", label: "Formación" },
   { href: "/financiamiento", label: "Financiamiento" },
 ];

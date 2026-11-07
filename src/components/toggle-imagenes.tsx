@@ -1,32 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ImageIcon, ImageOff } from "lucide-react";
-import { useUi } from "@/store/ui";
+import { useSyncExternalStore } from "react";
+import { Image as ImageIcon } from "lucide-react";
+import { ui, uiServidor } from "@/store/ui";
 import { cn } from "cn";
 
 export function ToggleImagenes({ className }: { className?: string }) {
-  const { imagenes, toggleImagenes } = useUi();
-  const [montado, setMontado] = useState(false);
-
-  useEffect(() => setMontado(true), []);
-
-  if (!montado) return <span className={cn("size-9", className)} aria-hidden="true" />;
+  const { imagenes } = useSyncExternalStore(
+    ui.suscribir,
+    ui.obtener,
+    () => uiServidor
+  );
 
   return (
     <button
       type="button"
-      onClick={toggleImagenes}
-      aria-pressed={imagenes}
-      aria-label={imagenes ? "Desactivar descarga de imágenes" : "Activar descarga de imágenes"}
-      title={imagenes ? "Imágenes activadas" : "Modo ahorro: sin imágenes"}
+      onClick={ui.toggleImagenes}
+      role="switch"
+      aria-checked={imagenes}
+      title={imagenes ? "Imágenes: encendidas" : "Imágenes: apagadas (modo 2G)"}
       className={cn(
-        "inline-flex size-9 items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-foreground",
-        imagenes ? "text-primary" : "text-muted-foreground",
+        "inline-flex size-9 items-center justify-center rounded-md transition-colors",
+        imagenes
+          ? "bg-primary/15 text-primary"
+          : "text-muted-foreground hover:bg-accent hover:text-foreground",
         className
       )}
     >
-      {imagenes ? <ImageIcon className="size-4" aria-hidden="true" /> : <ImageOff className="size-4" aria-hidden="true" />}
+      <ImageIcon className="size-4" aria-hidden="true" />
+      <span className="sr-only">Imágenes reales: {imagenes ? "encendidas" : "apagadas"}</span>
     </button>
   );
 }

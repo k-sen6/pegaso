@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useReservas } from "@/store/reservas";
+import { reservasStore } from "@/store/reservas";
 import type { Producto } from "@/lib/mock";
 import { cn } from "cn";
 
@@ -15,7 +15,7 @@ type Modo = "efectivo" | "transferencia";
  * acción se sincronizará a la cooperativa cuando haya señal.
  */
 export function BotonesReservar({ producto }: { producto: Producto }) {
-  const agregar = useReservas((s) => s.agregar);
+  const agregar = reservasStore.agregar;
   const [abierto, setAbierto] = useState<Modo | null>(null);
   const [guardado, setGuardado] = useState<string | null>(null);
   const [paso, setPaso] = useState<"forma" | "confirmando">("forma");

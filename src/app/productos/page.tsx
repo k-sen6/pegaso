@@ -14,12 +14,12 @@ export default function PaginaProductos() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <h1 className="text-2xl font-semibold tracking-tight">Productos</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Catálogo de cooperativas verificadas. {conCoop.length} productos.
+      <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Productos</h1>
+      <p className="mt-1.5 text-sm text-muted-foreground">
+        Catálogo de vendedores verificados. {conCoop.length} productos.
       </p>
       {conCoop.length > 0 ? (
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="mt-7 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {conCoop.map(({ producto, cooperativa }) => (
             <ProductCard key={producto.id} producto={producto} cooperativa={cooperativa} />
           ))}

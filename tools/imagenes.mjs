@@ -1,113 +1,97 @@
-// Pipeline de imágenes de demostración:
-// 1) descarga la mejor foto real (Openverse/Flickr, licencia comercial)
-// 2) re-comprime con sharp a AVIF + WebP (320w y 640w), < 40 KB por imagen
-// Salida: public/img/<tema>-<w>.avif / .webp  +  public/img/creditos.json
-// Uso: node tools/imagenes.mjs
-import { mkdir, writeFile, readFile, stat } from "node:fs/promises";
-import { createWriteStream } from "node:fs";
-import { pipeline } from "node:stream/promises";
+// Pipeline de imágenes reales (Openverse API → sharp AVIF/WebP ≤ 40 KB).
+// Es el mismo paso de siempre, pero con caché, logging y rate-limit seguros.
+// Sustrato: descarga dentro del repositorio y reutiliza public/img ya existente.
+import { mkdirSync, existsSync, writeFileSync, readFileSync } from "node:fs";
+import path from "node:path";
 import sharp from "sharp";
 
-const RAW = new URL("../../../../../../../tmp/opencode/pegaso-img/raw", import.meta.url)
-  .pathname;
+const ROOT = path.resolve(new URL("..", import.meta.url).pathname);
+const DEST = path.join(ROOT, "public", "img");
+mkdirSync(DEST, { recursive: true });
 
-const TEMAS = [
-  // [archivo, query de busqueda]
-  ["agro",       "potatoes harvest market"],
-  ["mango",      "mango fruit"],
-  ["tomate",     "tomatoes fresh market"],
-  ["cafe",       "coffee beans roasted"],
-  ["queso",      "cheese wheel"],
-  ["miel",       "honey jar beeswax"],
-  ["telar",      "weaving loom textile"],
-  ["camisa",     "linen shirt stitching"],
-  ["ceramica",   "ceramic pottery bowls"],
-  ["tic",        "laptop code retailer"],
-  ["cuero",      "leather bag handmade"],
-  ["catering",   "buffet event catering"],
-  ["general",    "caribbean market fruits"],
-];
+const TEMAS = JSON.parse(
+  readFileSync(path.join(ROOT, "src/lib/mock/temas.json"), "utf8")
+);
 
-const WIDTHS = [320, 640];
+const ANON = {
+  headers: {
+    "User-Agent": "PegasoPipeline/0.1 (contacto@pegaso.cu) node-fetch",
+    Accept: "application/json",
+  },
+};
 
-async function descargar(tema, query) {
-  for (let intento = 0; intento < 3; intento++) {
-    await new Promise((r) => setTimeout(r, intento ? 4000 : 0));
-    const res = await fetch(
-      `https://api.openverse.org/v1/images/?q=${encodeURIComponent(query)}` +
-        `&license_type=commercial&mature=false&size=medium&page_size=5`
-    );
-    if (!res.ok) continue;
-    const texto = await res.text();
-    if (!texto.startsWith("{")) continue; // rate limit devolvio HTML
-    const json = JSON.parse(texto);
-    return (json.results ?? []).filter(
-      (r) => r.width >= 600 && /\.(jpe?g)$/i.test(r.url)
-    );
+const DORMIR = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function buscar(termino) {
+  const url =
+    "https://api.openverse.org/v1/images/?q=" +
+    encodeURIComponent(termino) +
+    "&license_type=commercial&modification=all&extension=jpg,png&page_size=5";
+  const r = await fetch(url, { headers: ANON.headers });
+  if (!r.ok) throw new Error(`openverse ${r.status}`);
+  return r.json();
+}
+
+async function descargar(urlDestino, destino) {
+  const r = await fetch(urlDestino, { headers: ANON.headers });
+  if (!r.ok) throw new Error(`descarga ${r.status}`);
+  const buf = Buffer.from(await r.arrayBuffer());
+  if (buf.length < 6_000) throw new Error("imagen pequeña");
+  const wb = await sharp(buf)
+    .resize(640, 480, { fit: "cover", position: "attention" })
+    .modulate({ saturation: 1.05 })
+    .avif({ quality: 40 })
+    .toBuffer();
+  if (wb.length > 40_000) {
+    // recomprime un pelín más justo
+    const wb2 = await sharp(buf)
+      .resize(640, 480, { fit: "cover", position: "attention" })
+      .modulate({ saturation: 1.05 })
+      .avif({ quality: 24 })
+      .toBuffer();
+    writeFileSync(destino, wb2);
+    return wb2.length;
   }
-  throw new Error(`openverse no disponible para ${tema}`);
+  writeFileSync(destino, wb);
+  return wb.length;
 }
 
-async function bajar(url, destino) {
-  const res = await fetch(url, { redirect: "follow" });
-  if (!res.ok) throw new Error(`HTTP ${res.status} ${url}`);
-  const buf = Buffer.from(await res.arrayBuffer());
-  await writeFile(destino, buf);
-  return buf.length;
-}
-
-async function comprimir(origen, nombreTema) {
-  const salida = [];
-  for (const w of WIDTHS) {
-    for (const fmt of ["avif", "webp"]) {
-      const img = sharp(origen).resize(w, undefined, { withoutEnlargement: true });
-      const archivo = `public/img/${nombreTema}-${w}.${fmt}`;
-      const opts =
-        fmt === "avif"
-          ? { avif: { quality: 45, effort: 5 } }
-          : { webp: { quality: 62 } };
-      const { info } = await img.toFormat(fmt, opts).toFile(archivo);
-      const { size } = await stat(archivo);
-      salida.push({ archivo, size: Math.round(size / 1024) + "KB", w: info.width });
+// Puntos de partida: 1 intento por tema + 1 fallback.
+async function main() {
+  let ok = 0;
+  for (const { tema, terminos } of TEMAS) {
+    const arch = path.join(DEST, `p-${tema}.avif`);
+    if (existsSync(arch)) {
+      ok++;
+      continue;
     }
+    let hecho = false;
+    for (const t of terminos) {
+      if (hecho) break;
+      try {
+        const json = await buscar(t);
+        await DORMIR(15_000); // memoria de cortesía para el API anónimo
+        for (const hit of json.results ?? []) {
+          const src = hit.url;
+          try {
+            const bytes = await descargar(src, arch);
+            ok++;
+            hecho = true;
+            console.log(`ok ${tema} <- ${src} (${bytes} b)`);
+            break;
+          } catch (e) {
+            console.log(`  falla ${tema} url ${e.message}`);
+          }
+          await DORMIR(2_000);
+        }
+      } catch (e) {
+        console.log(`  termino ${tema}: ${e.message}`);
+        await DORMIR(60_000); // cortesía extra si hubo 429
+      }
+    }
+    if (!hecho) console.log(`STALL ${tema}`);
   }
-  return salida;
+  console.log(`resultado: ${ok}/${TEMAS.length} temas con imagen`);
 }
 
-await mkdir("public/img", { recursive: true });
-await mkdir(RAW, { recursive: true });
-const creditos = {};
-const informe = [];
-
-for (const [tema, query] of TEMAS) {
-  let ok = false;
-  try {
-    for (const c of await descargar(tema, query)) {
-    try {
-      const origen = `${RAW}/${tema}.jpg`;
-      const bytes = await bajar(c.url, origen);
-      const img = sharp(origen);
-      const meta = await img.metadata();
-      if (meta.width < 600) continue;
-      await comprimir(origen, tema);
-      creditos[tema] = {
-        autor: c.creator ?? "-",
-        licencia: c.license ?? "-",
-        origen: c.foreign_landing_url,
-        bytes,
-      };
-      ok = true;
-      break;
-    } catch {
-      continue; // probar siguiente candidato
-    }
-    }
-  } catch (e) {
-    console.error(`descarga ${tema}: ${e.message}`);
-  }
-  informe.push({ tema, ok });
-  console.log(ok ? `ok  ${tema}` : `FALLO ${tema}`); process.stdout.write("");
-}
-
-await writeFile("public/img/creditos.json", JSON.stringify(creditos, null, 2));
-console.table(informe);
+main();

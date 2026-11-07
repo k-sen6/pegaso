@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Pegaso — Cooperativas, marketplace y financiamiento de Cuba",
+    default: "Pegaso — Vendedores, marketplace y financiamiento de Cuba",
     template: "%s — Pegaso",
   },
   description:

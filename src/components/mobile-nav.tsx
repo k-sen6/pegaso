@@ -8,7 +8,7 @@ import { cn } from "cn";
 const ITEMS = [
   { href: "/", label: "Inicio", icon: Home },
   { href: "/productos", label: "Productos", icon: ShoppingBag },
-  { href: "/cooperativas", label: "Coops.", icon: Users },
+  { href: "/cooperativas", label: "Vendedores", icon: Users },
   { href: "/formacion", label: "Formación", icon: GraduationCap },
   { href: "/financiamiento", label: "Financiamiento", icon: PiggyBank },
 ];

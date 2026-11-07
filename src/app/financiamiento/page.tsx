@@ -13,20 +13,29 @@ const CRITERIOS = [
 
 export default function PaginaFinanciamiento() {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <span className="flex size-12 items-center justify-center rounded-lg bg-primary/15 text-primary">
-        <PiggyBank className="size-6" aria-hidden="true" />
-      </span>
-      <h1 className="mt-4 text-2xl font-semibold tracking-tight">
-        Financiamiento internacional para tu cooperativa
-      </h1>
-      <p className="mt-3 text-muted-foreground">
-        El programa <strong>NAE (Nuevos Actores Económicos)</strong> —financiado por la
-        Unión Europea e implementado por el PNUD, la Cooperación Francesa y el MEP—
-        entrega hasta <strong className="text-foreground">40 000 USD por iniciativa</strong> a
-        proyectos priorizados.
-      </p>
-      <h2 className="mt-8 font-semibold">¿Quién puede aplicar?</h2>
+    <div className="mx-auto max-w-3xl px-4 pb-16 pt-10">
+      <div
+        className="mb-6 rounded-2xl border p-6 sm:p-8"
+        style={{
+          background:
+            "radial-gradient(28rem 14rem at 88% -20%, oklch(0.75 0.10 230 / 0.15), transparent 70%), linear-gradient(to bottom right, oklch(1 0 0 / 0.02), oklch(1 0 0 / 0))",
+        }}
+      >
+        <span className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary/25 to-primary/10 text-primary ring-1 ring-primary/20">
+          <PiggyBank className="size-6" aria-hidden="true" />
+        </span>
+        <h1 className="mt-4 text-3xl font-semibold tracking-tight">
+          Financiamiento internacional para tu cooperativa
+        </h1>
+        <p className="mt-3 text-muted-foreground">
+          El programa <strong>NAE (Nuevos Actores Económicos)</strong> —financiado por la
+          Unión Europea e implementado por el PNUD, la Cooperación Francesa y el MEP—
+          entrega hasta <strong className="text-foreground">40 000 USD por iniciativa</strong> a
+          proyectos priorizados.
+        </p>
+      </div>
+
+      <h2 className="mt-6 font-semibold">¿Quién puede aplicar?</h2>
       <ul className="mt-3 grid gap-2 text-sm text-muted-foreground">
         {CRITERIOS.map((c) => (
           <li key={c} className="flex items-start gap-2">

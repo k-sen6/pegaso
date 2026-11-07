@@ -1,29 +1,39 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useUi } from "@/store/ui";
+import { useSyncExternalStore } from "react";
+import { ui, uiServidor } from "@/store/ui";
+import { TEMA_ARCHIVO } from "@/lib/mock/temas";
 
 /**
- * Isla client: muestra la imagen real del producto SOLO si el usuario
- * activó el modo de descarga de imágenes. Cero bytes de red con el
- * interruptor apagado; con él encendido, carga perezosa nativa.
- * Ruta esperada: /pegaso/img/p-<id>-640.webp (pipeline de imágenes, fase en curso).
+ * Isla cliente: solo descarga la imagen real si el usuario la pidió.
+ * Sin opt-in, muestra el placeholder gradiente determinista (0 bytes de red).
  */
-export function ImagenOptin({ alt }: { alt: string }) {
-  const imagenes = useUi((s) => s.imagenes);
-  const [montado, setMontado] = useState(false);
-  useEffect(() => setMontado(true), []);
-
-  if (!montado || !imagenes) return null;
-
-  return (
-    <img
-      src="/pegaso/img/p-generico-640.webp"
-      alt={alt}
-      loading="lazy"
-      decoding="async"
-      className="absolute inset-0 size-full object-cover"
-      onError={(e) => e.currentTarget.remove()}
-    />
+export function ImagenOptin({
+  temaId,
+  alt,
+  priorizar,
+}: {
+  temaId: string;
+  alt: string;
+  priorizar?: boolean;
+}) {
+  const { imagenes } = useSyncExternalStore(
+    ui.suscribir,
+    ui.obtener,
+    () => uiServidor
   );
+
+  if (imagenes) {
+    return (
+      <img
+        src={`/pegaso/img/${TEMA_ARCHIVO[temaId] ?? "generica"}.avif`}
+        alt={alt}
+        {...(priorizar ? { fetchPriority: "high" as const } : { loading: "lazy" as const })}
+        decoding="async"
+        className="absolute inset-0 size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+        onError={(e) => e.currentTarget.remove()}
+      />
+    );
+  }
+  return null;
 }

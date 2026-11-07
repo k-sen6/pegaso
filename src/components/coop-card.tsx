@@ -50,11 +50,11 @@ export function VerificacionBadge({
 
 export function CoopCard({ cooperativa }: { cooperativa: Cooperativa }) {
   return (
-    <article className="flex flex-col gap-3 rounded-lg border bg-card p-4 shadow-[var(--shadow-card)]">
+    <article className="group flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-[var(--shadow-card)] transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg">
       <div className="flex items-start justify-between gap-2">
         <span
           aria-hidden="true"
-          className="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/15 text-lg font-bold text-primary"
+          className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/25 to-primary/10 text-lg font-bold text-primary ring-1 ring-primary/20"
         >
           {cooperativa.nombre.charAt(0)}
         </span>
@@ -62,7 +62,7 @@ export function CoopCard({ cooperativa }: { cooperativa: Cooperativa }) {
       </div>
       <div className="min-h-0">
         <h3 className="font-medium leading-snug">
-          <Link href={`/cooperativas/${cooperativa.slug}`} className="hover:underline">
+          <Link href={`/cooperativas/${cooperativa.slug}`} className="hover:underline underline-offset-4">
             {cooperativa.nombre}
           </Link>
         </h3>
@@ -71,7 +71,7 @@ export function CoopCard({ cooperativa }: { cooperativa: Cooperativa }) {
           {NOMBRE_SECTOR[cooperativa.sector]} · {cooperativa.provincia}
         </p>
       </div>
-      <p className="line-clamp-2 text-sm text-muted-foreground">{cooperativa.descripcion}</p>
+      <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">{cooperativa.descripcion}</p>
       <p className="mt-auto text-xs text-muted-foreground">
         {cooperativa.productosCount} productos publicados
       </p>

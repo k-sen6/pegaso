@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { Trash2 } from "lucide-react";
-import { useReservas } from "@/store/reservas";
+import { reservasStore, reservasServidor } from "@/store/reservas";
 import { PRODUCTOS, cooperativaPorId } from "@/lib/mock";
 import { formatoPrecioCup } from "@/lib/precio";
 import { EmptyState } from "@/components/empty-state";
@@ -17,13 +17,12 @@ function fechaCorta(iso: string) {
 }
 
 export function MisReservas() {
-  const { reservas, quitar } = useReservas();
-  const [montado, setMontado] = useState(false);
-  useEffect(() => setMontado(true), []);
-
-  if (!montado) {
-    return <div className="mt-4 h-20 animate-pulse rounded-lg bg-muted" />;
-  }
+  const { reservas } = useSyncExternalStore(
+    reservasStore.suscribir,
+    reservasStore.obtener,
+    () => reservasServidor
+  );
+  const quitar = reservasStore.quitar;
 
   if (reservas.length === 0) {
     return (
