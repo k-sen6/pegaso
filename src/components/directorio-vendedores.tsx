@@ -6,8 +6,7 @@ import { Input } from "@/components/ui/input";
 import { CoopCard } from "@/components/coop-card";
 import { EmptyState } from "@/components/empty-state";
 import { supabase } from "@/lib/supabase";
-import type { Cooperativa, Sector } from "@/lib/mock/types";
-import { NOMBRE_SECTOR, SECTORES } from "@/lib/mock/types";
+import type { Cooperativa } from "@/lib/catalogo";
 import { cn } from "cn";
 
 type Filtro = "todos" | Sector;
@@ -88,11 +87,11 @@ export function DirectorioVendedores() {
           )}
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {(["todos", ...SECTORES] as Filtro[]).map((s) => (
+          {["todos", "agroalimentario", "textil", "artesania", "servicios", "tic"].map((s) => (
             <button
               key={s}
               type="button"
-              onClick={() => setFiltro(s)}
+              onClick={() => setFiltro(s as any)}
               aria-pressed={filtro === s}
               className={cn(
                 "rounded-full border px-3 py-1.5 text-sm transition-colors",
@@ -101,7 +100,17 @@ export function DirectorioVendedores() {
                   : "bg-card text-muted-foreground hover:border-primary/50 hover:text-foreground",
               )}
             >
-              {s === "todos" ? "Todos" : NOMBRE_SECTOR[s]}
+              {s === "todos"
+                ? "Todos"
+                : s === "agroalimentario"
+                ? "Agroalimentario"
+                : s === "textil"
+                ? "Textil"
+                : s === "artesania"
+                ? "Artesanía"
+                : s === "servicios"
+                ? "Servicios"
+                : "TIC"}
             </button>
           ))}
         </div>

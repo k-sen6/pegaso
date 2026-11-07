@@ -6,11 +6,33 @@ import { MapPin, Clock, Truck, ShieldCheck, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
 import { VerificacionBadge } from "@/components/coop-card";
-import type { Cooperativa, Producto, Sector, EstadoVerificacion } from "@/lib/mock/types";
+import { supabase } from "@/lib/supabase";
 
 interface VendedorEstado {
-  cooperativa: Cooperativa | null;
-  productos: Producto[];
+  cooperativa: {
+    id: string;
+    slug: string;
+    nombre: string;
+    sector: string;
+    provincia: string;
+    municipio: string;
+    descripcion: string;
+    verificacion: string;
+    foto_url: string | null;
+    created_at: string;
+  } | null;
+  productos: {
+    id: string;
+    slug: string;
+    nombre: string;
+    descripcion: string;
+    precio_cup: number;
+    sector: string;
+    destacado: boolean;
+    hue: number;
+    vendedor_id: string;
+    created_at: string;
+  }[];
   vivo: boolean;
 }
 
@@ -49,11 +71,11 @@ export default function VendedorClient() {
             id: ven.id,
             slug: ven.slug,
             nombre: ven.nombre,
-            sector: ven.sector as Sector,
+            sector: ven.sector,
             provincia: ven.provincia,
             municipio: ven.municipio,
             descripcion: ven.descripcion,
-            verificacion: ven.verificacion as EstadoVerificacion,
+            verificacion: ven.verificacion,
             nivel: "basico",
             productosCount: (prods ?? []).length,
           },
@@ -62,8 +84,8 @@ export default function VendedorClient() {
             slug: p.slug,
             nombre: p.nombre,
             descripcion: p.descripcion,
-            precioCup: p.precio_cup,
-            sector: p.sector as Sector,
+            precio_cup: p.precio_cup,
+            sector: p.sector,
             destacado: p.destacado,
             emoji: "▦",
             hue: p.hue ?? 225,

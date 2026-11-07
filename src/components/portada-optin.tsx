@@ -2,7 +2,6 @@
 
 import { useSyncExternalStore, type CSSProperties } from "react";
 import { ui, uiServidor } from "@/store/ui";
-import { TEMA_ARCHIVO } from "@/lib/mock/temas";
 import { cn } from "cn";
 
 /**
@@ -13,14 +12,12 @@ import { cn } from "cn";
  * el fondo continúa visible.
  */
 export function PortadaOptin({
-  temaId,
   hue,
   nombre,
   priorizar,
   className,
   fotoUrl,
 }: {
-  temaId: string;
   hue: number;
   nombre: string;
   priorizar?: boolean;
@@ -45,7 +42,7 @@ export function PortadaOptin({
       {imagenes && (
         <>
           <img
-            src={fotoUrl ?? `/pegaso/img/${TEMA_ARCHIVO[temaId] ?? "generica"}.avif`}
+            src={fotoUrl ?? "/pegaso/img/generica.avif"}
             alt={nombre}
             {...(priorizar ? { fetchPriority: "high" as const } : { loading: "lazy" as const })}
             decoding="async"

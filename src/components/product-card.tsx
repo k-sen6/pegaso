@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { BadgeCheck, MapPin, Heart } from "lucide-react";
-import type { Producto, Cooperativa } from "@/lib/mock/types";
+import type { Producto } from "@/lib/catalogo";
 import { formatoPrecioCup } from "@/lib/precio";
 import { cn } from "cn";
 import { PortadaOptin } from "@/components/portada-optin";
-import { TEMA_DE_PRODUCTO, TEMA_DE_SLUG } from "@/lib/mock/temas";
 
 export function ProductCard({
   producto,
@@ -36,7 +35,7 @@ export function ProductCard({
         aria-label={`${producto.nombre}, ${formatoPrecioCup(producto.precioCup)}`}
       >
         <PortadaOptin
-          temaId={TEMA_DE_PRODUCTO[producto.id] ?? TEMA_DE_SLUG[producto.slug] ?? "generica"}
+          temaId="generica"
           hue={producto.hue ?? 225}
           nombre={producto.nombre}
           fotoUrl={fotoUrl}

@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
 import { EmptyState } from "@/components/empty-state";
 import { useCatalogoVivo } from "@/lib/catalogo";
-import { NOMBRE_SECTOR, SECTORES, type Sector } from "@/lib/mock/types";
 import { cn } from "cn";
 
 type Orden = "relevancia" | "precio-asc" | "precio-desc" | "nombre";
@@ -60,7 +59,7 @@ function GrupoFiltro({
 export function Catalogo() {
   const { productos: PRODUCTOS, cooperativas } = useCatalogoVivo();
   const [texto, setTexto] = useState("");
-  const [sector, setSectorq] = useState<"todos" | Sector>("todos");
+  const [sector, setSectorq] = useState<"todos">("todos");
   const [provincia, setProvincia] = useState("todas");
   const [precioMax, setPrecioMax] = useState<null | number>(null);
   const [orden, setOrden] = useState<Orden>("relevancia");
@@ -87,9 +86,7 @@ export function Catalogo() {
       if (precioMax !== null && producto.precioCup > precioMax) return false;
       if (
         t &&
-        !`${producto.nombre} ${producto.descripcion} ${coop.nombre}`
-          .toLowerCase()
-          .includes(t)
+        !`${producto.nombre} ${producto.descripcion}`.toLowerCase().includes(t)
       )
         return false;
       return true;
@@ -151,7 +148,11 @@ export function Catalogo() {
           alCambiar={(v) => setSectorq(v as "todos" | Sector)}
           opciones={[
             { valor: "todos", etiqueta: "Todos" },
-            ...SECTORES.map((s) => ({ valor: s, etiqueta: NOMBRE_SECTOR[s] })),
+            { valor: "agroalimentario", etiqueta: "Agroalimentario" },
+            { valor: "textil", etiqueta: "Textil" },
+            { valor: "artesania", etiqueta: "Artesanía" },
+            { valor: "servicios", etiqueta: "Servicios" },
+            { valor: "tic", etiqueta: "TIC" },
           ]}
         />
         <GrupoFiltro

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { BadgeCheck, MapPin } from "lucide-react";
-import type { Cooperativa } from "@/lib/mock";
-import { NOMBRE_SECTOR } from "@/lib/mock/types";
+import type { Cooperativa } from "@/lib/catalogo";
 import { cn } from "cn";
 
 const VERIFICACION_UI: Record<
@@ -68,7 +67,17 @@ export function CoopCard({ cooperativa }: { cooperativa: Cooperativa }) {
         </h3>
         <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
           <MapPin className="size-3 shrink-0" aria-hidden="true" />
-          {NOMBRE_SECTOR[cooperativa.sector]} · {cooperativa.provincia}
+          {(cooperativa.sector === "agroalimentario"
+  ? "Agroalimentario"
+  : cooperativa.sector === "textil"
+  ? "Textil"
+  : cooperativa.sector === "artesania"
+  ? "Artesanía"
+  : cooperativa.sector === "servicios"
+  ? "Servicios"
+  : cooperativa.sector === "tic"
+  ? "TIC"
+  : cooperativa.sector)}{" · "}{cooperativa.provincia}
         </p>
       </div>
       <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">{cooperativa.descripcion}</p>

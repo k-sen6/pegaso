@@ -2,12 +2,32 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import type { Cooperativa, Producto } from "@/lib/mock";
-import {
-  PRODUCTOS,
-  cooperativaPorId,
-  COOPERATIVAS,
-} from "@/lib/mock";
+
+export interface Cooperativa {
+  id: string;
+  slug: string;
+  nombre: string;
+  sector: string;
+  provincia: string;
+  municipio: string;
+  descripcion: string;
+  verificacion: string;
+  foto_url: string | null;
+  created_at: string;
+}
+
+export interface Producto {
+  id: string;
+  slug: string;
+  nombre: string;
+  descripcion: string;
+  precio_cup: number;
+  sector: string;
+  destacado: boolean;
+  hue: number;
+  vendedor_id: string;
+  created_at: string;
+}
 
 export interface CatalogoRemoto {
   productos: Producto[];
@@ -16,29 +36,22 @@ export interface CatalogoRemoto {
   vivo: boolean;
 }
 
-function deMock(): CatalogoRemoto {
-  return {
-    productos: PRODUCTOS,
-    cooperativas: new Map(COOPERATIVAS.map((c) => [c.id, c])),
+export function useCatalogoVivo(): CatalogoRemoto {
+  const [estado, setEstado] = useState<CatalogoRemoto>({
+    productos: [],
+    cooperativas: new Map(),
     fotosPorProducto: new Map(),
     vivo: false,
-  };
-}
-
-/**
- * Catálogo vivo: usa Supabase cuando hay red.
- * - Si Supabase responde (incluso con 0 filas), se muestra eso (vacío si no hay productos).
- * - El mock solo se usa como fallback si NO hay red en absoluto (offline total).
- */
-export function useCatalogoVivo(): CatalogoRemoto {
-  const [estado, setEstado] = useState<CatalogoRemoto>(() => deMock());
-  const [online, setOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
+  });
+  const [online, setOnline] = useState(
+    typeof navigator !== "undefined" ? navigator.onLine : true
+  );
 
   useEffect(() => {
-    if (!supabase || !online) return;
-
     let vivo = true;
     (async () => {
+      if (!supabase || !online) return;
+
       try {
         const { data: vendedores, error: errV } = await supabase
           .from("vendedores")
@@ -46,43 +59,40 @@ export function useCatalogoVivo(): CatalogoRemoto {
           .order("nombre");
         if (errV || !vivo) return;
 
-        const { data: productosRemotos, error: errP } = await supabase
-          .from("productos")
-          .select("*")
-          .order("created_at", { ascending: false });
-        if (errP || !vivo) return;
-
-        // Mapear vendedores
         const mapa = new Map<string, Cooperativa>();
         for (const v of vendedores ?? []) {
           mapa.set(v.id, {
             id: v.id,
             slug: v.slug,
             nombre: v.nombre,
-            sector: (v.sector ?? "servicios") as Cooperativa["sector"],
+            sector: v.sector,
             provincia: v.provincia,
             municipio: v.municipio,
             descripcion: v.descripcion,
-            verificacion: (v.verificacion ?? "pendiente") as Cooperativa["verificacion"],
-            nivel: "basico",
-            productosCount: 0,
+            verificacion: v.verificacion,
+            foto_url: v.foto_url,
+            created_at: v.created_at,
           });
         }
 
-        // Mapear productos (SIEMPRE desde Supabase, incluso si está vacío)
+        const { data: productosRemotos, error: errP } = await supabase
+          .from("productos")
+          .select("*")
+          .order("created_at", { ascending: false });
+        if (errP || !vivo) return;
+
         const productos: Producto[] = (productosRemotos ?? []).map((p) => {
-          const vendedor = mapa.get(p.vendedor_id);
           return {
             id: p.id,
             slug: p.slug,
             nombre: p.nombre,
             descripcion: p.descripcion,
-            precioCup: p.precio_cup,
-            sector: (p.sector ?? "servicios") as Producto["sector"],
+            precio_cup: p.precio_cup,
+            sector: p.sector,
             destacado: p.destacado,
-            emoji: "▦",
             hue: p.hue ?? 225,
-            cooperativaId: vendedor ? vendedor.id : "",
+            vendedor_id: p.vendedor_id,
+            created_at: p.created_at,
           };
         });
 
@@ -90,7 +100,7 @@ export function useCatalogoVivo(): CatalogoRemoto {
         try {
           const { data: fotos } = await supabase
             .from("fotos")
-            .select("producto_id,url,created_at")
+            .select("producto_id, url, created_at")
             .eq("estado", "sincronizada")
             .not("producto_id", "is", null)
             .order("created_at", { ascending: false });
@@ -109,14 +119,14 @@ export function useCatalogoVivo(): CatalogoRemoto {
           setEstado({ productos, cooperativas: mapa, fotosPorProducto, vivo: true });
         }
       } catch {
-        // sin red o error: queda el mock (offline total)
+        // sin red o error: queda estado vacío (sin mock)
       }
     })();
 
     return () => {
       vivo = false;
     };
-  }, [supabase, online]);
+  }, [online]);
 
   // Detectar cambios de conexión online/offline
   useEffect(() => {
@@ -131,12 +141,4 @@ export function useCatalogoVivo(): CatalogoRemoto {
   }, []);
 
   return estado;
-}
-
-/** Resuelve el vendedor de un producto desde el mapa (remoto o mock). */
-export function vendedorDe(
-  producto: Producto,
-  cooperativas: Map<string, Cooperativa>,
-): Cooperativa {
-  return cooperativas.get(producto.cooperativaId) ?? cooperativaPorId(producto.cooperativaId)!;
 }

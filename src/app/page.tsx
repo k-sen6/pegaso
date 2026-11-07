@@ -8,7 +8,6 @@ import { ProductCard } from "@/components/product-card";
 import { CoopCard, VerificacionBadge } from "@/components/coop-card";
 import { PremiumCard } from "@/components/ui/premium-card";
 import { useCatalogoVivo } from "@/lib/catalogo";
-import type { Cooperativa, Producto } from "@/lib/mock/types";
 import { cn } from "cn";
 
 const MODULOS = [
@@ -222,11 +221,11 @@ export default function Home() {
   );
 }
 
-function useMemoDestacadas(productos: Producto[], vivo: boolean) {
+function useMemoDestacadas(productos: { id: string; slug: string; nombre: string; destacado: boolean }[], vivo: boolean) {
   if (!vivo) return [];
   return productos.filter((p) => p.destacado).slice(0, 8);
 }
 
-function useMemoVerificadas(cooperativas: Map<string, Cooperativa>) {
+function useMemoVerificadas(cooperativas: Map<string, { verificacion: string }>) {
   return Array.from(cooperativas.values()).filter((c) => c.verificacion === "verificado").slice(0, 4);
 }

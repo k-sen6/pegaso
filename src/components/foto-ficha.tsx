@@ -3,14 +3,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { PortadaOptin } from "@/components/portada-optin";
-import type { Producto } from "@/lib/mock";
-import { TEMA_DE_PRODUCTO, TEMA_DE_SLUG } from "@/lib/mock/temas";
 
 /**
  * Portada de la ficha: foto subida por el vendedor (Supabase) si existe;
  * si no, la AVIF temática local. Offline: siempre la local.
  */
-export function FotoFicha({ producto }: { producto: Producto }) {
+export function FotoFicha({ producto }: { producto: { id: string; slug: string; hue?: number } }) {
   const [fotoUrl, setFotoUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -44,7 +42,7 @@ export function FotoFicha({ producto }: { producto: Producto }) {
 
   return (
     <PortadaOptin
-      temaId={TEMA_DE_PRODUCTO[producto.id] ?? TEMA_DE_SLUG[producto.slug] ?? "generica"}
+      temaId="generica"
       hue={producto.hue ?? 225}
       nombre={producto.nombre}
       priorizar
