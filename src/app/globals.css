@@ -108,6 +108,147 @@
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
   --duration-fast: 150ms;
   --duration-normal: 250ms;
+  --duration-premium: 400ms;
+
+  /* Radios extendidos para tarjetas premium */
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* Sombras premium (capa doble sutil para profundidad) */
+  --shadow-premium: 0 1px 3px oklch(0 0 0 / 0.08), 0 4px 12px oklch(0 0 0 / 0.06), 0 8px 24px oklch(0 0 0 / 0.04);
+  --shadow-premium-hover: 0 1px 3px oklch(0 0 0 / 0.10), 0 8px 24px oklch(0 0 0 / 0.10), 0 16px 48px oklch(0 0 0 / 0.06);
+  --shadow-card: 0 1px 2px oklch(0 0 0 / 0.06), 0 1px 3px oklch(0 0 0 / 0.08);
+
+  /* Gradientes cielo (0 bytes de red) */
+  --gradient-sky: linear-gradient(135deg, oklch(0.85 0.07 230 / 0.14), oklch(0.60 0.12 250 / 0.12), transparent 70%);
+  --gradient-sky-strong: linear-gradient(135deg, oklch(0.75 0.10 230 / 0.20), oklch(0.55 0.14 250 / 0.18));
+  --gradient-card: linear-gradient(180deg, var(--color-card), oklch(var(--card-ch, var(--card-cl)) / 0.92));
+
+  /* Toque móvil: áreas mínimas 44px */
+  --touch-target: 44px;
+}
+
+/* === Mejoras de diseño (utilidades puras CSS, sin JS extra) === */
+@layer utilities {
+  /* Aparición suave solo para entrada de tarjetas */
+  .animate-fade-in {
+    animation: fade-in var(--duration-normal) var(--ease-out-quart) both;
+  }
+
+  /* Tarjeta premium con hover elevado */
+  .card-premium {
+    position: relative;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-border);
+    background: var(--color-card);
+    box-shadow: var(--shadow-card);
+    transition: transform var(--duration-premium) var(--ease-out-quart), box-shadow var(--duration-premium) var(--ease-out-quart), border-color var(--duration-premium) var(--ease-out-quart);
+    overflow: hidden;
+  }
+  .card-premium:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-premium-hover);
+    border-color: var(--color-ring);
+  }
+
+  /* Gradiente cielo decorativo (fondo de sección, 0 bytes de red) */
+  .bg-sky-mesh {
+    position: relative;
+    overflow: hidden;
+  }
+  .bg-sky-mesh::before {
+    content: "";
+    position: absolute;
+    inset: -50% -50% -50% -50%;
+    background: var(--gradient-sky);
+    opacity: 0.6;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .bg-sky-mesh > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Botón premium con estado activo */
+  .btn-premium {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-lg);
+    border: 1px solid transparent;
+    background: var(--color-primary);
+    color: var(--color-primary-foreground);
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+    min-height: var(--touch-target);
+    transition: background var(--duration-fast) var(--ease-out-quart), transform var(--duration-fast) var(--ease-out-quart), box-shadow var(--duration-fast) var(--ease-out-quart);
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .btn-premium:hover {
+    background: oklch(var(--primary-ch) / 0.9);
+    box-shadow: 0 0 0 4px oklch(var(--primary-ch) / 0.2);
+  }
+  .btn-premium:active {
+    transform: scale(0.97);
+  }
+  .btn-premium.outline {
+    background: transparent;
+    border-color: var(--color-border);
+    color: var(--color-foreground);
+  }
+  .btn-premium.outline:hover {
+    background: var(--color-accent);
+    border-color: var(--color-primary);
+  }
+  .btn-premium.secondary {
+    background: var(--color-secondary);
+    color: var(--color-secondary-foreground);
+  }
+
+  /* Texto con gradiente (títulos hero) */
+  .text-gradient {
+    background: var(--gradient-sky-strong);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Toque móvil: asegurar área mínima */
+  .touch-target {
+    min-height: var(--touch-target);
+    min-width: var(--touch-target);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* PWA instalada: mostrar navegación inferior */
+@media (display-mode: standalone) {
+  .bottom-nav-app {
+    display: flex !important;
+  }
 }
 
 @layer base {
@@ -153,5 +294,12 @@
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* PWA instalada: mostrar navegación inferior */
+@media (display-mode: standalone) {
+  .bottom-nav-app {
+    display: flex !important;
   }
 }
