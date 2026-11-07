@@ -3,6 +3,7 @@ import { BadgeCheck, MapPin, Heart } from "lucide-react";
 import type { Producto, Cooperativa } from "@/lib/mock";
 import { formatoPrecioCup } from "@/lib/precio";
 import { cn } from "cn";
+import { ImagenOptin } from "@/components/imagen-optin";
 
 /** Portada determinista sin red: gradiente por hue del producto. */
 function Portada({ producto, className }: { producto: Producto; className?: string }) {
@@ -15,8 +16,8 @@ function Portada({ producto, className }: { producto: Producto; className?: stri
       style={{
         background: `linear-gradient(135deg, oklch(0.85 0.08 220), oklch(0.55 0.11 235))`,
       }}
-      aria-hidden="true"
     >
+      <ImagenOptin alt={producto.nombre} />
       <span className="text-4xl select-none">{producto.emoji}</span>
     </div>
   );

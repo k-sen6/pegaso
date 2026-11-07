@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { CircleUserRound } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { ConnectionIndicator } from "@/components/connection-indicator";
 import { ToggleTema } from "@/components/toggle-tema";
+import { ToggleImagenes } from "@/components/toggle-imagenes";
 
 const NAV = [
   { href: "/", label: "Inicio" },
@@ -31,7 +33,15 @@ export function Header() {
         </nav>
         <div className="ml-auto flex items-center gap-2">
           <ConnectionIndicator className="hidden sm:inline-flex text-muted-foreground" />
+          <ToggleImagenes />
           <ToggleTema />
+          <Link
+            href="/mi-cuenta"
+            aria-label="Mi cuenta"
+            className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <CircleUserRound className="size-4" aria-hidden="true" />
+          </Link>
         </div>
       </div>
     </header>
