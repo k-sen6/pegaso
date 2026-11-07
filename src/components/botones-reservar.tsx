@@ -4,17 +4,23 @@ import { useState } from "react";
 import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { reservasStore } from "@/store/reservas";
-import type { Producto } from "@/lib/mock";
 import { cn } from "cn";
 
 type Modo = "efectivo" | "transferencia";
 
+export interface ProductoReserva {
+  id: string;
+  slug: string;
+  nombre: string;
+  precioCup: number;
+}
+
 /**
  * Flujo de reserva sin backend: guarda la reserva en el dispositivo
  * (Zustand persist). Con Supabase/PowerSync (Iteración 4-5) esta misma
- * acción se sincronizará a la cooperativa cuando haya señal.
+ * acción se sincronizará al vendedor cuando haya señal.
  */
-export function BotonesReservar({ producto }: { producto: Producto }) {
+export function BotonesReservar({ producto }: { producto: ProductoReserva }) {
   const agregar = reservasStore.agregar;
   const [abierto, setAbierto] = useState<Modo | null>(null);
   const [guardado, setGuardado] = useState<string | null>(null);
@@ -29,7 +35,11 @@ export function BotonesReservar({ producto }: { producto: Producto }) {
     setPaso("confirmando");
     // Pequeño delay para feedback perceptible (300 ms)
     await new Promise((r) => setTimeout(r, 300));
-    const reserva = agregar({ productoId: producto.id, modo });
+    const reserva = agregar({
+      productoId: producto.id,
+      nombreProducto: producto.nombre,
+      modo,
+    });
     setGuardado(reserva.id);
   };
 

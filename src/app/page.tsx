@@ -1,23 +1,14 @@
+"use client";
+
 import Link from "next/link";
-import {
-  GraduationCap,
-  ShoppingBag,
-  PiggyBank,
-  ArrowRight,
-  BadgeCheck,
-  MapPin,
-  Truck,
-  ShieldCheck,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { GraduationCap, ShoppingBag, PiggyBank, ArrowRight, BadgeCheck, MapPin, Truck, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
 import { CoopCard, VerificacionBadge } from "@/components/coop-card";
 import { PremiumCard } from "@/components/ui/premium-card";
-import {
-  COOPERATIVAS,
-  PRODUCTOS_DESTACADOS,
-  cooperativaPorId,
-} from "@/lib/mock";
+import { useCatalogoVivo } from "@/lib/catalogo";
+import type { Cooperativa, Producto } from "@/lib/mock/types";
 import { cn } from "cn";
 
 const MODULOS = [
@@ -48,7 +39,21 @@ const BENEFICIOS = [
 ] as const;
 
 export default function Home() {
-  const verificadas = COOPERATIVAS.filter((c) => c.verificacion === "verificado");
+  const { productos, cooperativas, fotosPorProducto, vivo } = useCatalogoVivo();
+
+  const destacadas = useMemoDestacadas(productos, vivo);
+  const verificadas = useMemoVerificadas(cooperativas);
+
+  if (!vivo) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-20 text-center">
+        <div className="animate-pulse rounded-xl bg-muted h-96 flex items-center justify-center">
+          <div className="h-24 w-24 rounded-full bg-muted/50 mx-auto" />
+        </div>
+        <p className="mt-4 text-muted-foreground">Cargando catálogo…</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -84,9 +89,9 @@ export default function Home() {
           </div>
           <div className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
             {[
-              ["8", "vendedores activos"],
-              ["38", "productos en catálogo"],
-              ["15", "cursos gratuitos"],
+              [cooperativas.size, "vendedores activos"],
+              [productos.length, "productos en catálogo"],
+              [15, "cursos gratuitos"],
               ["40 000 USD", "hasta en financiamiento NAE"],
             ].map(([n, t], i) => (
               <div key={i} className="flex items-baseline gap-2 text-left">
@@ -160,9 +165,16 @@ export default function Home() {
           </Link>
         </div>
         <div className="mt-8 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
-          {PRODUCTOS_DESTACADOS.map((producto) => {
-            const coop = cooperativaPorId(producto.cooperativaId)!;
-            return <ProductCard key={producto.id} producto={producto} cooperativa={coop} />;
+          {destacadas.map((producto) => {
+            const coop = cooperativas.get(producto.cooperativaId);
+            return (
+              <ProductCard
+                key={producto.id}
+                producto={producto}
+                cooperativa={coop ?? null}
+                fotoUrl={fotosPorProducto.get(producto.id) ?? null}
+              />
+            );
           })}
         </div>
       </section>
@@ -172,14 +184,14 @@ export default function Home() {
         <div className="flex items-baseline justify-between gap-2">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Directorio</p>
-            <h2 id="coops" className="text-3xl font-bold tracking-tight">Vendedores verificados</h2>
+            <h2 id="coops" className="mt-1 text-3xl font-bold tracking-tight">Vendedores verificados</h2>
           </div>
           <Link href="/cooperativas" className="text-sm font-medium text-primary hover:underline underline-offset-4">
             Ver directorio
           </Link>
         </div>
         <div className="mt-8 grid gap-5 sm:grid-cols-3 lg:grid-cols-4">
-          {verificadas.slice(0, 4).map((cooperativa) => (
+          {verificadas.map((cooperativa) => (
             <CoopCard key={cooperativa.id} cooperativa={cooperativa} />
           ))}
         </div>
@@ -208,4 +220,13 @@ export default function Home() {
       </section>
     </>
   );
+}
+
+function useMemoDestacadas(productos: Producto[], vivo: boolean) {
+  if (!vivo) return [];
+  return productos.filter((p) => p.destacado).slice(0, 8);
+}
+
+function useMemoVerificadas(cooperativas: Map<string, Cooperativa>) {
+  return Array.from(cooperativas.values()).filter((c) => c.verificacion === "verificado").slice(0, 4);
 }

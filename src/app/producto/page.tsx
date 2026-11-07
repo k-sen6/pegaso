@@ -16,7 +16,6 @@ import { BotonesReservar } from "@/components/botones-reservar";
 import { VerificacionBadge } from "@/components/coop-card";
 import type { Producto, Cooperativa, Sector, EstadoVerificacion } from "@/lib/mock/types";
 import { formatoPrecioCup } from "@/lib/precio";
-import { cn } from "cn";
 
 interface FichaEstado {
   producto: Producto | null;
@@ -24,12 +23,8 @@ interface FichaEstado {
   vivo: boolean;
 }
 
-/** Ficha de producto con datos de Supabase en vivo y mock de respaldo. */
-export default function FichaClient({
-  slug,
-}: {
-  slug: string;
-}) {
+export default function FichaProducto() {
+  const [slug, setSlug] = useState("");
   const [estado, setEstado] = useState<FichaEstado>({
     producto: null,
     cooperativa: null,
@@ -37,7 +32,10 @@ export default function FichaClient({
   });
 
   useEffect(() => {
-    if (!slug) return;
+    const params = new URLSearchParams(window.location.search);
+    const s = params.get("slug") ?? "";
+    setSlug(s);
+    if (!s) return;
     let vivo = true;
     (async () => {
       try {
@@ -46,7 +44,7 @@ export default function FichaClient({
         const { data: prod, error: errP } = await supabase
           .from("productos")
           .select("*")
-          .eq("slug", slug)
+          .eq("slug", s)
           .maybeSingle();
         if (errP || !prod || !vivo) return;
         const { data: ven, error: errV } = await supabase
@@ -91,12 +89,12 @@ export default function FichaClient({
     return () => {
       vivo = false;
     };
-  }, [slug]);
+  }, []);
 
   if (!slug) {
     return (
       <article className="mx-auto max-w-3xl px-4 py-12 text-center">
-        <p className="text-muted-foreground">Cargando producto…</p>
+        <p className="text-muted-foreground">Producto no especificado.</p>
       </article>
     );
   }
@@ -104,7 +102,7 @@ export default function FichaClient({
   if (!estado.producto) {
     return (
       <article className="mx-auto max-w-3xl px-4 py-12 text-center">
-        <p className="text-muted-foreground">Producto no encontrado.</p>
+        <p className="text-muted-foreground">Cargando producto…</p>
       </article>
     );
   }
@@ -124,7 +122,6 @@ export default function FichaClient({
       </Link>
 
       <div className="mt-4 grid gap-6 sm:grid-cols-2">
-        {/* Portada: foto real por defecto, placeholder en modo 2G */}
         <FotoFicha producto={p} />
 
         <div>
@@ -148,7 +145,7 @@ export default function FichaClient({
             </p>
             {v ? (
               <Link
-                href={`/cooperativas/${v.slug}`}
+                href={`/cooperativa?slug=${v.slug}`}
                 className="mt-1 flex items-center gap-1.5 font-medium hover:text-primary"
               >
                 <MapPin className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
@@ -170,16 +167,15 @@ export default function FichaClient({
             <div className="rounded-xl border p-3 flex items-center gap-2 bg-muted/40">
               <ShieldCheck className="size-4 text-success shrink-0" aria-hidden="true" />
               <span className="text-sm text-muted-foreground">Pago directo al vendedor</span>
-            </div>
+              </div>
           </div>
 
           <div className="mt-6">
-            <BotonesReservar producto={p} />
+            <BotonesReservar producto={{ id: p.id, slug: p.slug, nombre: p.nombre, precioCup: p.precioCup }} />
           </div>
         </div>
       </div>
 
-      {/* También te puede interesar */}
       <section className="mt-10" aria-labelledby="relacionados">
         <h2 id="relacionados" className="text-lg font-semibold tracking-tight">
           También te puede interesar
@@ -191,10 +187,9 @@ export default function FichaClient({
         </div>
       </section>
 
-      {/* Enlaces de acción */}
       <div className="mt-8 flex flex-wrap items-center gap-2">
         <Link
-          href={`/cooperativas/${v?.slug ?? slug}`}
+          href={`/cooperativa?slug=${v?.slug ?? slug}`}
           className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline underline-offset-4"
         >
           Ver todos los productos de{v?.nombre ? " " + v.nombre : " este vendedor"} <ArrowRight />

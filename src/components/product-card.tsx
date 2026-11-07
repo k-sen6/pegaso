@@ -1,6 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { BadgeCheck, MapPin, Heart } from "lucide-react";
-import type { Producto, Cooperativa } from "@/lib/mock";
+import type { Producto, Cooperativa } from "@/lib/mock/types";
 import { formatoPrecioCup } from "@/lib/precio";
 import { cn } from "cn";
 import { PortadaOptin } from "@/components/portada-optin";
@@ -13,11 +15,14 @@ export function ProductCard({
   fotoUrl,
 }: {
   producto: Producto;
-  cooperativa: Cooperativa;
+  cooperativa?: Cooperativa | null;
   className?: string;
   fotoUrl?: string | null;
 }) {
-  const verificado = cooperativa.verificacion === "verificado";
+  const verificado = cooperativa?.verificacion === "verificado";
+  const nombreCoop = cooperativa?.nombre ?? "";
+  const provinciaCoop = cooperativa?.provincia ?? "";
+
   return (
     <article
       className={cn(
@@ -26,7 +31,7 @@ export function ProductCard({
       )}
     >
       <Link
-        href={`/productos/${producto.slug}`}
+        href={`/producto?slug=${producto.slug}`}
         className="block focus-visible:outline-none"
         aria-label={`${producto.nombre}, ${formatoPrecioCup(producto.precioCup)}`}
       >
@@ -47,7 +52,7 @@ export function ProductCard({
       </button>
       <div className="flex flex-col gap-2 p-4">
         <h3 className="truncate font-semibold text-lg leading-snug">
-          <Link href={`/productos/${producto.slug}`} className="hover:underline underline-offset-4">
+          <Link href={`/producto?slug=${producto.slug}`} className="hover:underline underline-offset-4">
             {producto.nombre}
           </Link>
         </h3>
@@ -59,12 +64,14 @@ export function ProductCard({
             <BadgeCheck className="size-4 shrink-0 text-success" aria-label="Vendedor verificado" />
           )}
         </div>
-        <p className="flex items-center gap-1 text-xs text-muted-foreground">
-          <MapPin className="size-3 shrink-0" aria-hidden="true" />
-          <span className="truncate">
-            {cooperativa.nombre} · {cooperativa.provincia}
-          </span>
-        </p>
+        {nombreCoop && (
+          <p className="flex items-center gap-1 text-xs text-muted-foreground">
+            <MapPin className="size-3 shrink-0" aria-hidden="true" />
+            <span className="truncate">
+              {nombreCoop} · {provinciaCoop}
+            </span>
+          </p>
+        )}
       </div>
     </article>
   );

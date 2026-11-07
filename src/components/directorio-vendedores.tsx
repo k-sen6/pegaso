@@ -1,28 +1,68 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { CoopCard } from "@/components/coop-card";
 import { EmptyState } from "@/components/empty-state";
-import { COOPERATIVAS } from "@/lib/mock";
-import { NOMBRE_SECTOR, SECTORES, type Sector } from "@/lib/mock/types";
+import { supabase } from "@/lib/supabase";
+import type { Cooperativa, Sector } from "@/lib/mock/types";
+import { NOMBRE_SECTOR, SECTORES } from "@/lib/mock/types";
 import { cn } from "cn";
 
 type Filtro = "todos" | Sector;
 
 export function DirectorioVendedores() {
+  const [vendedores, setVendedores] = useState<Cooperativa[]>([]);
+  const [cargando, setCargando] = useState(true);
   const [texto, setTexto] = useState("");
   const [filtro, setFiltro] = useState<Filtro>("todos");
 
+  useEffect(() => {
+    if (!supabase) {
+      setCargando(false);
+      return;
+    }
+    let montado = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("vendedores")
+          .select("*")
+          .order("nombre");
+        if (error) throw error;
+        if (montado) setVendedores((data ?? []) as unknown as Cooperativa[]);
+      } catch {
+        // sin red
+      } finally {
+        if (montado) setCargando(false);
+      }
+    })();
+    return () => {
+      montado = false;
+    };
+  }, []);
+
   const listados = useMemo(() => {
     const t = texto.trim().toLowerCase();
-    return COOPERATIVAS.filter((coop) => {
+    return vendedores.filter((coop) => {
       if (filtro !== "todos" && coop.sector !== filtro) return false;
       if (t && !`${coop.nombre} ${coop.provincia} ${coop.municipio} ${coop.descripcion}`.toLowerCase().includes(t)) return false;
       return true;
     });
-  }, [texto, filtro]);
+  }, [texto, filtro, vendedores]);
+
+  if (cargando) {
+    return (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+          <div key={i} className="rounded-xl border bg-muted animate-pulse h-64 flex items-center justify-center">
+            <div className="h-24 w-24 rounded-full bg-muted/50 mx-auto" />
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div>

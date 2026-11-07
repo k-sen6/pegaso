@@ -6,6 +6,7 @@ export type ModoPago = "efectivo" | "transferencia";
 export interface Reserva {
   id: string;
   productoId: string;
+  nombreProducto: string;
   modo: ModoPago;
   estado: "local";
   fechaISO: string;

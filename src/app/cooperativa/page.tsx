@@ -14,11 +14,8 @@ interface VendedorEstado {
   vivo: boolean;
 }
 
-export default function VendedorClient({
-  slug,
-}: {
-  slug: string;
-}) {
+export default function VendedorClient() {
+  const [slug, setSlug] = useState("");
   const [estado, setEstado] = useState<VendedorEstado>({
     cooperativa: null,
     productos: [],
@@ -26,7 +23,10 @@ export default function VendedorClient({
   });
 
   useEffect(() => {
-    if (!slug) return;
+    const params = new URLSearchParams(window.location.search);
+    const s = params.get("slug") ?? "";
+    setSlug(s);
+    if (!s) return;
     let vivo = true;
     (async () => {
       try {
@@ -35,7 +35,7 @@ export default function VendedorClient({
         const { data: ven, error: errV } = await supabase
           .from("vendedores")
           .select("*")
-          .eq("slug", slug)
+          .eq("slug", s)
           .maybeSingle();
         if (errV || !ven || !vivo) return;
         const { data: prods, error: errP } = await supabase
@@ -78,7 +78,15 @@ export default function VendedorClient({
     return () => {
       vivo = false;
     };
-  }, [slug]);
+  }, []);
+
+  if (!slug) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-12 text-center">
+        <p className="text-muted-foreground">Vendedor no especificado.</p>
+      </div>
+    );
+  }
 
   if (!estado.cooperativa) {
     return (
