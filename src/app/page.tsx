@@ -66,7 +66,7 @@ export default function Home() {
             </span>
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground sm:text-xl lg:text-2xl">
-            Pegaso conecta cooperativas cubanas con compradores nacionales y
+            Pegaso conecta vendedores con compradores nacionales y
             financiamiento internacional. Funciona aunque la señal se vaya:
             tus cambios se sincronizan cuando vuelva.
           </p>

@@ -5,7 +5,7 @@ import { BadgeCheck, FileDown, PiggyBank } from "lucide-react";
 export const metadata = { title: "Financiamiento" };
 
 const CRITERIOS = [
-  "Estar legalizada o en proceso como cooperativa o trabajador por cuenta propia (NAE).",
+  "Estar legalizada o en proceso como vendedor o trabajador por cuenta propia (NAE).",
   "Sectores priorizados: agroalimentario, energías renovables, TIC e industrias creativas.",
   "Participación destacada de mujeres y jóvenes en la dirección del proyecto.",
   "2 o más trabajadores asociados, o plan claro de incorporación.",
