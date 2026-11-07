@@ -4,7 +4,7 @@ import { BadgeCheck, MapPin, ChevronLeft } from "lucide-react";
 import { ProductCard } from "@/components/product-card";
 import { VerificacionBadge } from "@/components/coop-card";
 import { BotonesReservar } from "@/components/botones-reservar";
-import { PortadaOptin } from "@/components/portada-optin";
+import { FotoFicha } from "@/components/foto-ficha";
 import { TEMA_DE_PRODUCTO } from "@/lib/mock/temas";
 import {
   PRODUCTOS,
@@ -54,13 +54,7 @@ export default async function FichaProducto({
 
       <div className="mt-4 grid gap-6 sm:grid-cols-2">
         {/* Portada: foto real por defecto, placeholder en modo 2G */}
-        <PortadaOptin
-          temaId={TEMA_DE_PRODUCTO[producto.id] ?? "generica"}
-          hue={producto.hue ?? 225}
-          nombre={producto.nombre}
-          priorizar
-          className="aspect-[4/3] rounded-xl"
-        />
+        <FotoFicha producto={producto} />
 
         <div>
           <p className="flex items-center gap-1.5 text-sm text-muted-foreground">

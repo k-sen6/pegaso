@@ -10,10 +10,12 @@ export function ProductCard({
   producto,
   cooperativa,
   className,
+  fotoUrl,
 }: {
   producto: Producto;
   cooperativa: Cooperativa;
   className?: string;
+  fotoUrl?: string | null;
 }) {
   const verificado = cooperativa.verificacion === "verificado";
   return (
@@ -32,6 +34,7 @@ export function ProductCard({
           temaId={TEMA_DE_PRODUCTO[producto.id] ?? TEMA_DE_SLUG[producto.slug] ?? "generica"}
           hue={producto.hue ?? 225}
           nombre={producto.nombre}
+          fotoUrl={fotoUrl}
           className="aspect-[4/3] rounded-lg"
         />
       </Link>

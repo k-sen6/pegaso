@@ -59,7 +59,7 @@ function GrupoEtiquetas({
 }
 
 export function Catalogo() {
-  const { productos: PRODUCTOS, cooperativas } = useCatalogoVivo();
+  const { productos: PRODUCTOS, cooperativas, fotosPorProducto } = useCatalogoVivo();
   const [texto, setTexto] = useState("");
   const [sector, setSectorq] = useState<"todos" | Sector>("todos");
   const [provincia, setProvincia] = useState("todas");
@@ -189,7 +189,14 @@ export function Catalogo() {
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {listados.map((producto) => {
             const coop = cooperativas.get(producto.cooperativaId)!;
-            return <ProductCard key={producto.id} producto={producto} cooperativa={coop} />;
+            return (
+              <ProductCard
+                key={producto.id}
+                producto={producto}
+                cooperativa={coop}
+                fotoUrl={fotosPorProducto.get(producto.id) ?? null}
+              />
+            );
           })}
         </div>
       ) : (

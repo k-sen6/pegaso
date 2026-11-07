@@ -2,6 +2,7 @@ import Link from "next/link";
 import { TicketIcon, UploadCloud } from "lucide-react";
 import { MisReservas } from "@/components/mis-reservas";
 import { SubirFoto } from "@/components/subida-foto";
+import { MisFotos } from "@/components/mis-fotos";
 
 export const metadata = { title: "Mi cuenta" };
 
@@ -37,6 +38,10 @@ export default function PaginaMiCuenta() {
         </p>
         <div className="mt-4">
           <SubirFoto />
+        </div>
+        <div className="mt-6">
+          <h3 className="text-sm font-semibold">Mis fotos sincronizadas</h3>
+          <MisFotos />
         </div>
       </section>
     </div>

@@ -9,7 +9,7 @@ import { PRODUCTOS_DESTACADOS, cooperativaPorId } from "@/lib/mock";
  * Productos destacados: mock al instante, luego Supabase en vivo.
  */
 export function DestacadosVivos() {
-  const { productos, cooperativas, vivo } = useCatalogoVivo();
+  const { productos, cooperativas, vivo, fotosPorProducto } = useCatalogoVivo();
 
   const destacados = useMemo(() => {
     if (!vivo) return PRODUCTOS_DESTACADOS;
@@ -22,7 +22,14 @@ export function DestacadosVivos() {
       {destacados.map((producto) => {
         const coop = cooperativas.get(producto.cooperativaId) ?? cooperativaPorId(producto.cooperativaId);
         if (!coop) return null;
-        return <ProductCard key={producto.id} producto={producto} cooperativa={coop} />;
+        return (
+          <ProductCard
+            key={producto.id}
+            producto={producto}
+            cooperativa={coop}
+            fotoUrl={fotosPorProducto.get(producto.id) ?? null}
+          />
+        );
       })}
     </div>
   );

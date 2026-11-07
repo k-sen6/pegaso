@@ -18,6 +18,7 @@ export function PortadaOptin({
   nombre,
   priorizar,
   className,
+  fotoUrl,
 }: {
   temaId: string;
   hue: number;
@@ -25,6 +26,8 @@ export function PortadaOptin({
   priorizar?: boolean;
   className?: string;
   grande?: boolean;
+  /** Foto subida por el vendedor: si existe, es LA portada. */
+  fotoUrl?: string | null;
 }) {
   const { imagenes } = useSyncExternalStore(
     ui.suscribir,
@@ -42,7 +45,7 @@ export function PortadaOptin({
       {imagenes && (
         <>
           <img
-            src={`/pegaso/img/${TEMA_ARCHIVO[temaId] ?? "generica"}.avif`}
+            src={fotoUrl ?? `/pegaso/img/${TEMA_ARCHIVO[temaId] ?? "generica"}.avif`}
             alt={nombre}
             {...(priorizar ? { fetchPriority: "high" as const } : { loading: "lazy" as const })}
             decoding="async"

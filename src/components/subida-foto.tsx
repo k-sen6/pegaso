@@ -23,11 +23,13 @@ import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/empty-state";
 import { comprimirFoto, formatoPeso } from "@/lib/compresor";
 import { guardarBlob, leerBlob, borrarBlob } from "@/lib/blob-db";
+import { useCatalogoVivo } from "@/lib/catalogo";
 import { cn } from "cn";
 
 export interface Subida {
   id: string;
   productoNombre: string;
+  productoId: string | null;
   fotoId: string; // clave IndexedDB
   pesoBytes: number;
   ancho: number;
@@ -115,6 +117,9 @@ export const subirStore = {
  * la fila en `fotos`. Sin backend configurado puede lanzar; la cola local
  * nunca se pierde (el caller reintenta).
  */
+function esUuid(v: string | null | undefined): v is string {
+  return typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+}
 export async function enviarSubida(subida: Subida, blob: Blob): Promise<string> {
   const { supabase } = await import("@/lib/supabase");
   if (!supabase) throw new Error("Sin backend configurado: queda en cola local.");
@@ -125,7 +130,7 @@ export async function enviarSubida(subida: Subida, blob: Blob): Promise<string> 
   if (errSubida) throw errSubida;
   const { data } = supabase.storage.from("fotos").getPublicUrl(nombre);
   const { error: errFila } = await supabase.from("fotos").insert({
-    producto_id: null,
+    producto_id: esUuid(subida.productoId) ? subida.productoId : null,
     nombre_producto: subida.productoNombre,
     url: data.publicUrl,
     peso_bytes: subida.pesoBytes,
@@ -160,8 +165,10 @@ export function SubirFoto() {
   const [miniaturas, setMiniaturas] = useState<Record<string, string>>({});
   const [drag, setDrag] = useState(false);
   const [subiendoId, setSubiendoId] = useState<string | null>(null);
+  const [productoSel, setProductoSel] = useState<string>("");
   const inputArchivo = useRef<HTMLInputElement>(null);
   const inputCamara = useRef<HTMLInputElement>(null);
+  const { productos: catalogo } = useCatalogoVivo();
 
   const procesar = async (files: FileList | File[]) => {
     const file = Array.from(files)[0];
@@ -196,8 +203,10 @@ export function SubirFoto() {
     if (!blobActual || !vista) return;
     const fotoId = `foto-${nuevoId()}`;
     await guardarBlob(fotoId, blobActual);
+    const producto = catalogo.find((p) => p.id === productoSel);
     subirStore.agregar({
-      productoNombre: nombre.trim() || "Foto sin título",
+      productoNombre: producto?.nombre ?? (nombre.trim() || "Foto sin título"),
+      productoId: productoSel || null,
       fotoId,
       pesoBytes: vista.pesoBytes,
       ancho: vista.ancho,
@@ -206,6 +215,7 @@ export function SubirFoto() {
     setVista(null);
     setBlobActual(null);
     setNombre("");
+    setProductoSel("");
   };
 
   const intentar = async (subida: Subida) => {
@@ -324,6 +334,19 @@ export function SubirFoto() {
             aria-label="Nombre del producto"
             className="max-w-xs flex-1"
           />
+          <select
+            value={productoSel}
+            onChange={(e) => setProductoSel(e.target.value)}
+            aria-label="Producto al que pertenece la foto"
+            className="h-9 min-w-[220px] rounded-md border bg-card px-3 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <option value="">Sin producto asociado</option>
+            {catalogo.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.nombre}
+              </option>
+            ))}
+          </select>
           <Button type="button" disabled={!blobActual} onClick={guardar}>
             <CheckCircle2 className="size-4" aria-hidden="true" />
             Añadir a la cola

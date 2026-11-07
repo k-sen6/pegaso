@@ -12,6 +12,8 @@ import {
 export interface CatalogoRemoto {
   productos: Producto[];
   cooperativas: Map<string, Cooperativa>;
+  /** foto subida más reciente por productoId (url pública) */
+  fotosPorProducto: Map<string, string>;
   /** true si los datos vinieron de Supabase (no del mock local) */
   vivo: boolean;
 }
@@ -20,6 +22,7 @@ function deMock(): CatalogoRemoto {
   return {
     productos: PRODUCTOS,
     cooperativas: new Map(COOPERATIVAS.map((c) => [c.id, c])),
+    fotosPorProducto: new Map(),
     vivo: false,
   };
 }
@@ -77,7 +80,25 @@ export function useCatalogoVivo(): CatalogoRemoto {
             cooperativaId: vendedor ? vendedor.id : "",
           };
         });
-        setEstado({ productos, cooperativas: mapa, vivo: true });
+        const fotosPorProducto = new Map<string, string>();
+        try {
+          const { data: fotos } = await supabase
+            .from("fotos")
+            .select("producto_id,url,created_at")
+            .eq("estado", "sincronizada")
+            .not("producto_id", "is", null)
+            .order("created_at", { ascending: false });
+          if (fotos) {
+            for (const f of fotos) {
+              if (f.producto_id && f.url && !fotosPorProducto.has(f.producto_id)) {
+                fotosPorProducto.set(f.producto_id, f.url);
+              }
+            }
+          }
+        } catch {
+          // sin fotos: sigue el catálogo
+        }
+        setEstado({ productos, cooperativas: mapa, fotosPorProducto, vivo: true });
       } catch {
         // sin red o error: queda el mock, silencioso (offline-first)
       }
