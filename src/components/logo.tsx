@@ -26,7 +26,7 @@ export function Logo({ className }: { className?: string }) {
       <span className="flex flex-col leading-none">
         <span className="text-lg font-semibold tracking-tight">Pegaso</span>
         <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-          Mercado cubano
+          Que tu negocio vuele
         </span>
       </span>
     </span>
