@@ -7,7 +7,7 @@ import { generateSW } from "workbox-build";
 const result = await generateSW({
   swDest: "out/sw.js",
   globDirectory: "out",
-  globPatterns: ["**/*.html", "**/*.js", "**/*.css", "**/*.woff2", "**/*.json", "**/*.svg", "**/*.png"],
+  globPatterns: ["**/*.js", "**/*.css", "**/*.woff2", "**/*.json", "**/*.svg", "**/*.png"],
   maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
   skipWaiting: true,
   clientsClaim: true,
