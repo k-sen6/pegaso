@@ -49,10 +49,10 @@ export function MisReservas() {
           <li key={reserva.id} className="flex items-center gap-3 rounded-lg border bg-card p-3">
             <span
               aria-hidden="true"
-              className="flex size-10 shrink-0 items-center justify-center rounded-md text-xl"
+              className="flex size-10 shrink-0 items-center justify-center rounded-md text-base font-bold text-primary"
               style={{ background: "linear-gradient(135deg, oklch(0.85 0.08 220), oklch(0.55 0.11 235))" }}
             >
-              {producto.emoji}
+              {producto.nombre.charAt(0)}
             </span>
             <div className="min-w-0 flex-1">
               <Link href={`/productos/${producto.slug}`} className="block truncate font-medium hover:underline">

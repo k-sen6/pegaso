@@ -4,7 +4,7 @@ import { BadgeCheck, MapPin, ChevronLeft } from "lucide-react";
 import { ProductCard } from "@/components/product-card";
 import { VerificacionBadge } from "@/components/coop-card";
 import { BotonesReservar } from "@/components/botones-reservar";
-import { ImagenOptin } from "@/components/imagen-optin";
+import { PortadaOptin } from "@/components/portada-optin";
 import { TEMA_DE_PRODUCTO } from "@/lib/mock/temas";
 import {
   PRODUCTOS,
@@ -53,24 +53,14 @@ export default async function FichaProducto({
       </Link>
 
       <div className="mt-4 grid gap-6 sm:grid-cols-2">
-        {/* Portada (placeholder con gradiente determinista + imagen opt-in) */}
-        <div
-          className="group relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-xl"
-          style={{
-            background: `linear-gradient(135deg, oklch(0.86 0.07 ${producto.hue + 10}), oklch(0.56 0.11 ${producto.hue - 18}))`,
-          }}
-        >
-          <ImagenOptin
-            temaId={TEMA_DE_PRODUCTO[producto.id] ?? "generica"}
-            alt={producto.nombre}
-            priorizar
-          />
-          <span
-            aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-white/10"
-          />
-          <span className="relative text-7xl select-none drop-shadow-sm">{producto.emoji}</span>
-        </div>
+        {/* Portada: foto real por defecto, placeholder en modo 2G */}
+        <PortadaOptin
+          temaId={TEMA_DE_PRODUCTO[producto.id] ?? "generica"}
+          hue={producto.hue ?? 225}
+          nombre={producto.nombre}
+          priorizar
+          className="aspect-[4/3] rounded-xl"
+        />
 
         <div>
           <p className="flex items-center gap-1.5 text-sm text-muted-foreground">

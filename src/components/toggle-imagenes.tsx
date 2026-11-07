@@ -18,7 +18,7 @@ export function ToggleImagenes({ className }: { className?: string }) {
       onClick={ui.toggleImagenes}
       role="switch"
       aria-checked={imagenes}
-      title={imagenes ? "Imágenes: encendidas" : "Imágenes: apagadas (modo 2G)"}
+      title={imagenes ? "Imágenes: encendidas" : "Imágenes apagadas (modo 2G)"}
       className={cn(
         "inline-flex size-9 items-center justify-center rounded-md transition-colors",
         imagenes

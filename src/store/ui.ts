@@ -2,12 +2,12 @@
 // (Sustituye a zustand: menos peso y sin riesgo de excepciones de cliente.)
 
 export interface UiState {
-  /** Descarga real de imágenes (AVIF/WebP ligero). Apagado por defecto: 2G seguro. */
+  /** Imágenes reales. true = normal; false = modo 2G (0 bytes de red). */
   imagenes: boolean;
 }
 
-const KEY = "pegaso-ui";
-const DEFAULT: UiState = { imagenes: false };
+const KEY = "pegaso-ui:v2";
+const DEFAULT: UiState = { imagenes: true };
 
 let estado: UiState = DEFAULT;
 let hidratado = false;

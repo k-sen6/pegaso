@@ -14,7 +14,7 @@ const MODULOS = [
     href: "/formacion",
     icono: GraduationCap,
     titulo: "Formación",
-    txt: "Cursos para crear y formalizar tu vendedor cooperativo, con guías descargables para trabajar sin red.",
+    txt: "Cursos para crear y formalizar tu negocio, con guías descargables para trabajar sin red.",
   },
   {
     href: "/productos",

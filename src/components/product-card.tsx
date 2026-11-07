@@ -3,45 +3,8 @@ import { BadgeCheck, MapPin, Heart } from "lucide-react";
 import type { Producto, Cooperativa } from "@/lib/mock";
 import { formatoPrecioCup } from "@/lib/precio";
 import { cn } from "cn";
-import { ImagenOptin } from "@/components/imagen-optin";
+import { PortadaOptin } from "@/components/portada-optin";
 import { TEMA_DE_PRODUCTO } from "@/lib/mock/temas";
-
-/** Portada determinista sin red: gradiente por hue del producto. */
-function Portada({
-  producto,
-  className,
-  priorizar,
-}: {
-  producto: Producto;
-  className?: string;
-  priorizar?: boolean;
-}) {
-  const hue = producto.hue ?? 225;
-  return (
-    <div
-      className={cn(
-        "relative flex items-center justify-center overflow-hidden rounded-lg",
-        className
-      )}
-      style={{
-        background: `linear-gradient(135deg, oklch(0.86 0.07 ${hue + 10}), oklch(0.56 0.11 ${hue - 18}))`,
-      }}
-    >
-      <ImagenOptin temaId={TEMA_DE_PRODUCTO[producto.id] ?? "generica"} alt={producto.nombre} priorizar={priorizar} />
-      <span
-        aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-white/10"
-      />
-      <span className="relative text-4xl select-none drop-shadow-sm transition-transform duration-300 group-hover:scale-110">
-        {producto.emoji}
-      </span>
-      <span
-        aria-hidden="true"
-        className="absolute inset-x-0 bottom-0 h-px bg-white/25"
-      />
-    </div>
-  );
-}
 
 export function ProductCard({
   producto,
@@ -65,7 +28,12 @@ export function ProductCard({
         className="focus-visible:outline-none"
         aria-label={`${producto.nombre}, ${formatoPrecioCup(producto.precioCup)}`}
       >
-        <Portada producto={producto} className="aspect-[4/3]" />
+        <PortadaOptin
+          temaId={TEMA_DE_PRODUCTO[producto.id] ?? "generica"}
+          hue={producto.hue ?? 225}
+          nombre={producto.nombre}
+          className="aspect-[4/3] rounded-lg"
+        />
       </Link>
       <button
         type="button"
