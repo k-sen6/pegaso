@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { Package, ShieldCheck, BookOpen, Landmark } from "lucide-react";
 
+/** Hash del build (lo inyecta el workflow de Pages; local = "dev"). */
+const BUILD = (process.env.NEXT_PUBLIC_BUILD ?? "dev").slice(0, 7);
+
 export function Footer() {
   return (
     <footer className="border-t bg-muted/40">
@@ -11,7 +14,7 @@ export function Footer() {
             Plataforma que conecta vendedores cubanos verificados con compradores y
             oportunidades de financiamiento internacional.
           </p>
-          <p className="mt-4 text-xs text-muted-foreground">© 2026 Pegaso</p>
+          <p className="mt-4 text-xs text-muted-foreground">© 2026 Pegaso · build {BUILD}</p>
         </div>
         <nav aria-label="Enlaces del sitio" className="grid gap-2.5 content-start">
           <p className="font-medium text-foreground">Sitio</p>

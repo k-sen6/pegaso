@@ -12,6 +12,9 @@ const nextConfig: NextConfig = {
   basePath: enApk ? "" : "/pegaso",
   assetPrefix: isProd && !enApk ? "/pegaso" : undefined,
   trailingSlash: true,
+  env: {
+    NEXT_PUBLIC_BUILD: process.env.NEXT_PUBLIC_BUILD ?? "devlocal",
+  },
 };
 
 export default nextConfig;

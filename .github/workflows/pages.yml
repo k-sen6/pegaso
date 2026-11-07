@@ -27,6 +27,8 @@ jobs:
       - run: npm run build
         env:
           NODE_ENV: production
+          NEXT_PUBLIC_BUILD: ${{ github.sha }}
+          BUILD_ID: ${{ github.sha }}
       - run: node tools/generar-sw.mjs
       - uses: actions/upload-pages-artifact@v3
         with:

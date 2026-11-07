@@ -9,21 +9,30 @@ const result = await generateSW({
   globDirectory: "out",
   globPatterns: ["**/*.html", "**/*.js", "**/*.css", "**/*.woff2", "**/*.json", "**/*.svg", "**/*.png"],
   maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+  skipWaiting: true,
+  clientsClaim: true,
   runtimeCaching: [
     {
-      // Navegaciones a páginas no precacheadas: cache + refresco en fondo
+      // Navegaciones: RED PRIMERO (máx 4 s) con caché como red de seguridad.
+      // Así el teléfono muestra la versión nueva al refrescar (con conexión),
+      // y queda lo último disponible si no hay señal.
       urlPattern: ({ request, url }) =>
         request.mode === "navigate" && url.pathname.startsWith("/pegaso/"),
-      handler: "StaleWhileRevalidate",
-      options: { cacheName: "paginas", expiration: { maxEntries: 60 } },
+      handler: "NetworkFirst",
+      options: {
+        cacheName: "paginas",
+        networkTimeoutSeconds: 4,
+        expiration: { maxEntries: 60 },
+      },
     },
     {
-      // Imágenes: cache-first (peso es lo más caro en 2G)
+      // Imágenes: cache-first (peso es lo más caro en 2G), pero con
+      // expiración corta para que un rediseño de catálogo las refresque.
       urlPattern: /\.(?:png|jpe?g|gif|webp|avif|svg)$/i,
-      handler: "CacheFirst",
+      handler: "StaleWhileRevalidate",
       options: {
         cacheName: "imagenes",
-        expiration: { maxEntries: 120, maxAgeSeconds: 60 * 60 * 24 * 30 },
+        expiration: { maxEntries: 120, maxAgeSeconds: 60 * 60 * 24 * 7 },
       },
     },
     {
