@@ -59,10 +59,10 @@ export default function Home() {
             <BadgeCheck className="size-3" aria-hidden="true" />
             Vendedores verificados por personas reales
           </span>
-          <h1 className="mx-auto mt-6 max-w-2xl text-4xl font-bold tracking-tight text-balance sm:text-6xl lg:text-7xl text-gradient">
-            Tu negocio,{" "}
+          <h1 className="mx-auto mt-6 max-w-2xl text-4xl font-bold tracking-tight text-balance sm:text-6xl lg:text-7xl">
+            Vende sin límites.{" "}
             <span className="text-primary">
-              listo para vender y crecer
+              Crece sin fronteras.
             </span>
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground sm:text-xl lg:text-2xl">

@@ -19,41 +19,41 @@
   /* === Modo claro === */
   --background: #ffffff;
   --foreground: #0f172a;
-  --muted: #f0f7fc;
-  --muted-foreground: #475569;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
   --card: #ffffff;
   --border: #e2e8f0;
   --input: #e2e8f0;
-  --ring: #0284c7;
+  --ring: #0ea5e9;
 
-  --primary: #0284c7;
+  --primary: #0ea5e9;
   --primary-foreground: #ffffff;
-  --secondary: #f0f7fc;
+  --secondary: #f1f5f9;
   --secondary-foreground: #0f172a;
   --accent: #e0f2fe;
-  --accent-foreground: #0c4a6e;
+  --accent-foreground: #0369a1;
   --destructive: #b91c1c;
   --success: #15803d;
   --warning: #b45309;
-  --info: #0284c7;
+  --info: #0ea5e9;
 }
 
 /* === Modo oscuro (prioridad de producto) === */
 .dark {
-  --background: #070d14;
+  --background: #020617;
   --foreground: #f8fafc;
-  --muted: #0e1721;
+  --muted: #0f172a;
   --muted-foreground: #94a3b8;
-  --card: #0c141d;
-  --border: #1d2a3a;
-  --input: #1d2a3a;
+  --card: #0f172a;
+  --border: #1e293b;
+  --input: #1e293b;
   --ring: #38bdf8;
 
   --primary: #38bdf8;
-  --primary-foreground: #082f49;
-  --secondary: #0e1721;
+  --primary-foreground: #0f172a;
+  --secondary: #0f172a;
   --secondary-foreground: #f8fafc;
-  --accent: #13283c;
+  --accent: #1e293b;
   --accent-foreground: #bae6fd;
   --destructive: #dc2626;
   --success: #22c55e;
@@ -121,8 +121,8 @@
   --shadow-card: 0 1px 2px oklch(0 0 0 / 0.06), 0 1px 3px oklch(0 0 0 / 0.08);
 
   /* Gradientes cielo (0 bytes de red) */
-  --gradient-sky: linear-gradient(135deg, oklch(0.85 0.07 230 / 0.14), oklch(0.60 0.12 250 / 0.12), transparent 70%);
-  --gradient-sky-strong: linear-gradient(135deg, oklch(0.75 0.10 230 / 0.20), oklch(0.55 0.14 250 / 0.18));
+  --gradient-sky: linear-gradient(135deg, oklch(0.96 0.02 230 / 0.10), oklch(0.92 0.03 240 / 0.07), transparent 70%);
+  --gradient-sky-strong: linear-gradient(135deg, oklch(0.9 0.04 225 / 0.14), oklch(0.85 0.06 245 / 0.10));
   --gradient-card: linear-gradient(180deg, var(--color-card), oklch(var(--card-ch, var(--card-cl)) / 0.92));
 
   /* Toque móvil: áreas mínimas 44px */

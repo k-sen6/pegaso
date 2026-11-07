@@ -1,20 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "./supabase";
-import type { Cooperativa, Producto } from "./mock";
+import { supabase } from "@/lib/supabase";
+import type { Cooperativa, Producto } from "@/lib/mock";
 import {
   PRODUCTOS,
   cooperativaPorId,
   COOPERATIVAS,
-} from "./mock";
+} from "@/lib/mock";
 
 export interface CatalogoRemoto {
   productos: Producto[];
   cooperativas: Map<string, Cooperativa>;
-  /** foto subida más reciente por productoId (url pública) */
   fotosPorProducto: Map<string, string>;
-  /** true si los datos vinieron de Supabase (no del mock local) */
   vivo: boolean;
 }
 
@@ -28,14 +26,17 @@ function deMock(): CatalogoRemoto {
 }
 
 /**
- * Catálogo vivo: muestra el mock al instante (offline-first) y lo
- * reemplaza por Supabase en vivo cuando haya red. Si falla, sigue mock.
+ * Catálogo vivo: usa Supabase cuando hay red.
+ * - Si Supabase responde (incluso con 0 filas), se muestra eso (vacío si no hay productos).
+ * - El mock solo se usa como fallback si NO hay red en absoluto (offline total).
  */
 export function useCatalogoVivo(): CatalogoRemoto {
   const [estado, setEstado] = useState<CatalogoRemoto>(() => deMock());
+  const [online, setOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
 
   useEffect(() => {
-    if (!supabase || typeof navigator !== "undefined" && !navigator.onLine) return;
+    if (!supabase || !online) return;
+
     let vivo = true;
     (async () => {
       try {
@@ -43,15 +44,17 @@ export function useCatalogoVivo(): CatalogoRemoto {
           .from("vendedores")
           .select("*")
           .order("nombre");
-        if (errV || !vendedores?.length) return;
+        if (errV || !vivo) return;
+
         const { data: productosRemotos, error: errP } = await supabase
           .from("productos")
           .select("*")
-          .order("nombre");
-        if (errP || !productosRemotos?.length) return;
-        if (!vivo) return;
+          .order("created_at", { ascending: false });
+        if (errP || !vivo) return;
+
+        // Mapear vendedores
         const mapa = new Map<string, Cooperativa>();
-        for (const v of vendedores) {
+        for (const v of vendedores ?? []) {
           mapa.set(v.id, {
             id: v.id,
             slug: v.slug,
@@ -65,7 +68,9 @@ export function useCatalogoVivo(): CatalogoRemoto {
             productosCount: 0,
           });
         }
-        const productos: Producto[] = productosRemotos.map((p) => {
+
+        // Mapear productos (SIEMPRE desde Supabase, incluso si está vacío)
+        const productos: Producto[] = (productosRemotos ?? []).map((p) => {
           const vendedor = mapa.get(p.vendedor_id);
           return {
             id: p.id,
@@ -80,6 +85,7 @@ export function useCatalogoVivo(): CatalogoRemoto {
             cooperativaId: vendedor ? vendedor.id : "",
           };
         });
+
         const fotosPorProducto = new Map<string, string>();
         try {
           const { data: fotos } = await supabase
@@ -98,13 +104,29 @@ export function useCatalogoVivo(): CatalogoRemoto {
         } catch {
           // sin fotos: sigue el catálogo
         }
-        setEstado({ productos, cooperativas: mapa, fotosPorProducto, vivo: true });
+
+        if (vivo) {
+          setEstado({ productos, cooperativas: mapa, fotosPorProducto, vivo: true });
+        }
       } catch {
-        // sin red o error: queda el mock, silencioso (offline-first)
+        // sin red o error: queda el mock (offline total)
       }
     })();
+
     return () => {
       vivo = false;
+    };
+  }, [supabase, online]);
+
+  // Detectar cambios de conexión online/offline
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = () => setOnline(navigator.onLine);
+    window.addEventListener("online", handler);
+    window.addEventListener("offline", handler);
+    return () => {
+      window.removeEventListener("online", handler);
+      window.removeEventListener("offline", handler);
     };
   }, []);
 
