@@ -6,6 +6,7 @@ import { GraduationCap, ShoppingBag, PiggyBank, ArrowRight, BadgeCheck, MapPin, 
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
 import { CoopCard, VerificacionBadge } from "@/components/coop-card";
+import type { Cooperativa } from "@/lib/catalogo";
 import { PremiumCard } from "@/components/ui/premium-card";
 import { useCatalogoVivo } from "@/lib/catalogo";
 import { cn } from "cn";
@@ -226,6 +227,6 @@ function useMemoDestacadas(productos: Producto[], vivo: boolean) {
   return productos.filter((p): p is Producto => p.destacado).slice(0, 8);
 }
 
-function useMemoVerificadas(cooperativas: Map<string, { verificacion: string }>) {
+function useMemoVerificadas(cooperativas: Map<string, Cooperativa>) {
   return Array.from(cooperativas.values()).filter((c) => c.verificacion === "verificado").slice(0, 4);
 }
