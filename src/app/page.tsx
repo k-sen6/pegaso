@@ -165,7 +165,7 @@ export default function Home() {
         </div>
         <div className="mt-8 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
           {destacadas.map((producto) => {
-            const coop = cooperativas.get(producto.vendedor_id && (producto as any).vendedor_id);
+            const coop = cooperativas.get(producto.vendedor_id || null);
             return (
               <ProductCard
                 key={producto.id}
@@ -221,9 +221,9 @@ export default function Home() {
   );
 }
 
-function useMemoDestacadas(productos: any[][], vivo: boolean) {
+function useMemoDestacadas(productos: Producto[], vivo: boolean) {
   if (!vivo) return [];
-  return productos.filter((p) => p.destacado).slice(0, 8);
+  return productos.filter((p): p is Producto => p.destacado).slice(0, 8);
 }
 
 function useMemoVerificadas(cooperativas: Map<string, { verificacion: string }>) {
