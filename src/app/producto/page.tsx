@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import type { Producto, Cooperativa, Sector, EstadoVerificacion } from "@/lib/catalogo";
 import {
   BadgeCheck,
   ChevronLeft,
@@ -14,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { FotoFicha } from "@/components/foto-ficha";
 import { BotonesReservar } from "@/components/botones-reservar";
 import { VerificacionBadge } from "@/components/coop-card";
-import type { Producto, Cooperativa, Sector, EstadoVerificacion } from "@/lib/mock/types";
+
 import { formatoPrecioCup } from "@/lib/precio";
 
 interface FichaEstado {

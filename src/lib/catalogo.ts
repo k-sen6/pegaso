@@ -27,6 +27,7 @@ export interface Producto {
   hue: number;
   vendedor_id: string;
   created_at: string;
+  precioCup?: number;
 }
 
 export interface CatalogoRemoto {
