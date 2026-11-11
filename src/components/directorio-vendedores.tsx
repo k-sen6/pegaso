@@ -91,7 +91,7 @@ export function DirectorioVendedores() {
             <button
               key={s}
               type="button"
-              onClick={() => setFiltro(s as any)}
+              onClick={() => setFiltro(s)}
               aria-pressed={filtro === s}
               className={cn(
                 "rounded-full border px-3 py-1.5 text-sm transition-colors",
