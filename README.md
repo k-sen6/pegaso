@@ -77,3 +77,4 @@ src/
 - **Iteración 4:** autenticación y panel de cooperativa.
 - **Iteración 5:** offline real con PowerSync + Service Worker.
 - **Iteración 6:** pedidos, verificación y financiamiento NAE.
+
