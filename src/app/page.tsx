@@ -185,7 +185,7 @@ export default function Home() {
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Directorio</p>
             <h2 id="coops" className="mt-1 text-3xl font-bold tracking-tight">Vendedores verificados</h2>
           </div>
-          <Link href="/cooperativas" className="text-sm font-medium text-primary hover:underline underline-offset-4">
+          <Link href="/vendedores" className="text-sm font-medium text-primary hover:underline underline-offset-4">
             Ver directorio
           </Link>
         </div>
