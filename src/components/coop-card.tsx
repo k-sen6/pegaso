@@ -61,7 +61,7 @@ export function CoopCard({ cooperativa }: { cooperativa: Cooperativa }) {
       </div>
       <div className="min-h-0">
         <h3 className="font-semibold leading-snug">
-          <Link href={`/cooperativa?slug=${cooperativa.slug}`} className="hover:underline underline-offset-4">
+          <Link href={`/vendedor?slug=${cooperativa.slug}`} className="hover:underline underline-offset-4">
             {cooperativa.nombre}
           </Link>
         </h3>
