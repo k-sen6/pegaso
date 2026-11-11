@@ -6,7 +6,7 @@ import { GraduationCap, ShoppingBag, PiggyBank, ArrowRight, BadgeCheck, MapPin, 
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
 import { CoopCard, VerificacionBadge } from "@/components/coop-card";
-import type { Cooperativa } from "@/lib/catalogo";
+import type { Cooperativa, Producto } from "@/lib/catalogo";
 import { PremiumCard } from "@/components/ui/premium-card";
 import { useCatalogoVivo } from "@/lib/catalogo";
 import { cn } from "cn";
@@ -166,7 +166,7 @@ export default function Home() {
         </div>
         <div className="mt-8 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
           {destacadas.map((producto) => {
-            const coop = cooperativas.get(producto.vendedor_id || null);
+            const coop = cooperativas.get(producto.vendedor_id!);
             return (
               <ProductCard
                 key={producto.id}
