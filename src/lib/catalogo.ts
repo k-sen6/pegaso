@@ -16,6 +16,9 @@ export interface Cooperativa {
   created_at: string;
 }
 
+export type Sector = string;
+export type EstadoVerificacion = string;
+
 export interface Producto {
   id: string;
   slug: string;
