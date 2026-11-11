@@ -77,6 +77,11 @@ export default function PanelProductosVendedor() {
   }, []);
 
   async function cargar() {
+    if (!session?.user) {
+      setProductos([]);
+      setCargando(false);
+      return;
+    }
     const sb = supabase;
     if (!sb) {
       setCargando(false);
@@ -182,6 +187,12 @@ export default function PanelProductosVendedor() {
       setError("Backend no disponible.");
       return;
     }
+    // Obtener usuario autenticado
+    const { data: { user} } = await sb.auth.getUser();
+    if (!user) {
+      setError("No hay sesión de usuario activa.");
+      return;
+    }
     setSubiendo(true);
     setError(null);
 
@@ -209,7 +220,7 @@ export default function PanelProductosVendedor() {
         precio_cup: form.precioCup,
         sector: form.sector,
         destacado: form.destacado,
-        vendedor_id: "00000000-0000-0000-0000-000000000001",
+        vendedor_id: user.id,
       };
 
       if (editandoId) {
