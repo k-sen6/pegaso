@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { BadgeCheck, MapPin, Heart } from "lucide-react";
+import { BadgeCheck, MapPin } from "lucide-react";
 import type { Cooperativa, Producto } from "@/lib/catalogo";
 import { formatoPrecioCup } from "@/lib/precio";
 import { cn } from "cn";
 import { PortadaOptin } from "@/components/portada-optin";
+import { BotonWhatsApp } from "@/components/boton-whatsapp";
+import { mensajeProducto, urlProducto } from "@/lib/whatsapp";
 
 export function ProductCard({
   producto,
@@ -42,13 +44,17 @@ export function ProductCard({
           className="aspect-[4/3] rounded-lg"
         />
       </Link>
-      <button
-        type="button"
-        aria-label={`Guardar ${producto.nombre} en favoritos`}
-        className="absolute right-3 top-3 inline-flex size-10 items-center justify-center rounded-full bg-background/90 text-muted-foreground shadow-sm backdrop-blur-md transition-all hover:scale-110 hover:text-primary active:scale-95"
-      >
-        <Heart className="size-5" aria-hidden="true" />
-      </button>
+      <BotonWhatsApp
+        compacto
+        telefono={cooperativa?.telefono}
+        mensaje={mensajeProducto({
+          vendedor: nombreCoop,
+          producto: producto.nombre,
+          precioCup: producto.precio_cup,
+          url: urlProducto(producto.slug),
+        })}
+        className="absolute right-3 top-3 z-10"
+      />
       <div className="flex flex-col gap-2 p-4">
         <h3 className="truncate font-semibold text-lg leading-snug">
           <Link href={`/producto?slug=${producto.slug}`} className="hover:underline underline-offset-4">

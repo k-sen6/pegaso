@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { GraduationCap, ShoppingBag, PiggyBank, ArrowRight, BadgeCheck, MapPin, Truck, ShieldCheck } from "lucide-react";
+import { GraduationCap, ShoppingBag, PiggyBank, ArrowRight, BadgeCheck, Truck, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
 import { CoopCard, VerificacionBadge } from "@/components/coop-card";

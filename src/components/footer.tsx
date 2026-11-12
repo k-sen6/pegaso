@@ -11,8 +11,8 @@ export function Footer() {
         <div className="sm:col-span-1">
           <p className="font-semibold tracking-tight text-foreground">Pegaso</p>
           <p className="mt-2 leading-relaxed text-muted-foreground">
-            Plataforma que conecta vendedores cubanos verificados con compradores y
-            oportunidades de financiamiento internacional.
+            Plataforma que conecta vendedores locales con compradores y
+            oportunidades de formación y financiamiento.
           </p>
           <p className="mt-4 text-xs text-muted-foreground">© 2026 Pegaso · build {BUILD}</p>
         </div>
@@ -41,8 +41,21 @@ export function Footer() {
             programa NAE (UE / PNUD / MEP).
           </p>
           <p className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-xs">
-            <span>Contacto: hola@pegaso.cu</span>
+            <a href="mailto:hola@pegaso.cu" className="hover:text-foreground">
+              hola@pegaso.cu
+            </a>
             <span>Soporte offline garantizado (PWA instalable)</span>
+          </p>
+          <p className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-xs">
+            <Link href="/terminos" className="hover:text-foreground">
+              Términos
+            </Link>
+            <Link href="/privacidad" className="hover:text-foreground">
+              Privacidad
+            </Link>
+            <Link href="/contacto" className="hover:text-foreground">
+              Contacto
+            </Link>
           </p>
         </div>
       </div>

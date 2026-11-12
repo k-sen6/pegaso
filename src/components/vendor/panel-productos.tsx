@@ -19,22 +19,7 @@ import { comprimirFoto, formatoPeso } from "@/lib/compresor";
 import { asegurarPerfilVendedor } from "@/lib/auth";
 import { formatoPrecioCup } from "@/lib/precio";
 import { cn } from "cn";
-
-const SECTORES = [
-  "agroalimentario",
-  "textil",
-  "artesania",
-  "servicios",
-  "tic",
-] as const;
-
-const SECTOR_LABELS: Record<string, string> = {
-  agroalimentario: "Agroalimentario",
-  textil: "Textil",
-  artesania: "Artesanía",
-  servicios: "Servicios",
-  tic: "TIC",
-};
+import { SECTORES, SECTOR_LABELS } from "@/lib/perfil-opciones";
 
 function slugProducto(nombre: string): string {
   const base = nombre
@@ -557,8 +542,8 @@ export default function PanelProductosVendedor({
                       className="h-11 w-full rounded-lg border bg-card px-3 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       {SECTORES.map((s) => (
-                        <option key={s} value={s}>
-                          {SECTOR_LABELS[s]}
+                        <option key={s.valor} value={s.valor}>
+                          {s.etiqueta}
                         </option>
                       ))}
                     </select>

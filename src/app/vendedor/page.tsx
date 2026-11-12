@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { MapPin, Clock, Truck, ShieldCheck, ArrowRight } from "lucide-react";
+import { MapPin, ArrowRight, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
 import { VerificacionBadge } from "@/components/coop-card";
-import { supabase } from "@/lib/supabase";
+import { BotonWhatsApp } from "@/components/boton-whatsapp";
+import { enlaceMapa, formatearTelefono, mensajeTienda } from "@/lib/whatsapp";
 
 interface VendedorEstado {
   cooperativa: {
@@ -19,6 +20,10 @@ interface VendedorEstado {
     descripcion: string;
     verificacion: string;
     foto_url: string | null;
+    telefono: string | null;
+    direccion: string | null;
+    lat: number | null;
+    lng: number | null;
     created_at: string;
   } | null;
   productos: {
@@ -61,7 +66,7 @@ export default function VendedorClient() {
           .eq("slug", s)
           .maybeSingle();
         if (errV || !ven || !vivo) return;
-        const { data: prods, error: errP } = await supabase
+        const { data: prods } = await supabase
           .from("productos")
           .select("*")
           .eq("vendedor_id", ven.id)
@@ -98,6 +103,10 @@ export default function VendedorClient() {
             descripcion: ven.descripcion,
             verificacion: ven.verificacion,
             foto_url: ven.foto_url,
+            telefono: ven.telefono ?? null,
+            direccion: ven.direccion ?? null,
+            lat: ven.lat ?? null,
+            lng: ven.lng ?? null,
             created_at: ven.created_at,
           },
           productos: (prods ?? []).map((p) => ({
@@ -140,7 +149,13 @@ export default function VendedorClient() {
   }
 
   const c = estado.cooperativa;
-  const verificado = c.verificacion === "verificado";
+  const mapa = enlaceMapa({
+    direccion: c.direccion,
+    municipio: c.municipio,
+    provincia: c.provincia,
+    lat: c.lat,
+    lng: c.lng,
+  });
   const tieneProductos = estado.productos.length > 0;
 
   return (
@@ -162,29 +177,38 @@ export default function VendedorClient() {
                 {c.sector.charAt(0).toUpperCase() + c.sector.slice(1)} ·{" "}
                 {c.municipio}, {c.provincia}
               </span>
+              {c.telefono && (
+                <span className="inline-flex items-center gap-1">
+                  <MessageCircle className="size-3.5" aria-hidden="true" />
+                  {formatearTelefono(c.telefono)}
+                </span>
+              )}
             </p>
+            {c.direccion && (
+              <p className="mt-1 text-sm text-muted-foreground">
+                Recogida: {c.direccion}
+              </p>
+            )}
+            {mapa && (
+              <a
+                href={mapa}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+              >
+                <MapPin className="size-3.5" aria-hidden="true" />
+                Ver ubicación en el mapa
+              </a>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <VerificacionBadge verificacion={c.verificacion} />
-            {verificado && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-success/40 bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
-                <ShieldCheck className="size-3 shrink-0" aria-hidden="true" />
-                Verificado
-              </span>
-            )}
           </div>
         </div>
         <p className="mt-3 max-w-2xl text-pretty text-muted-foreground">
           {c.descripcion}
         </p>
       </div>
-
-      {c.verificacion !== "verificado" && (
-        <p className="mt-3 flex items-center gap-1.5 text-xs text-warning">
-          <Clock className="size-3.5" aria-hidden="true" />
-          Este vendedor aún no está verificado para publicar productos.
-        </p>
-      )}
 
       {/* Productos del vendedor */}
       {tieneProductos && (
@@ -220,17 +244,27 @@ export default function VendedorClient() {
           Sin cuentas ni comisiones: acuerda con{c.nombre ?? "el vendedor"} y paga al recoger.
         </p>
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
-          <Button asChild size="lg" className="h-11 px-6">
-            <Link href={`https://wa.me/?text=Hola ${c.nombre}, vi tu producto en Pegaso y me interesa.`}>
-              <Truck className="size-4" aria-hidden="true" />
-              Escríbelo por WhatsApp
-            </Link>
-          </Button>
-          <Button asChild variant="outline" size="lg" className="h-11 px-6">
-            <Link href="/productos">
-              Ver otros productos
-            </Link>
-          </Button>
+          <BotonWhatsApp
+            telefono={c.telefono}
+            mensaje={mensajeTienda({
+              vendedor: c.nombre,
+              url: typeof window !== "undefined" ? window.location.href : "",
+              direccion: c.direccion,
+              mapa,
+            })}
+          />
+          {mapa ? (
+            <Button asChild variant="outline" size="lg" className="h-11 px-6">
+              <a href={mapa} target="_blank" rel="noopener noreferrer">
+                <MapPin className="size-4 mr-2" aria-hidden="true" />
+                Cómo llegar
+              </a>
+            </Button>
+          ) : (
+            <Button asChild variant="outline" size="lg" className="h-11 px-6">
+              <Link href="/productos">Ver otros productos</Link>
+            </Button>
+          )}
         </div>
       </section>
     </div>

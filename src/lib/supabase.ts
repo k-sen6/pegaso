@@ -22,6 +22,10 @@ export interface PegasoTypes {
         descripcion: string;
         verificacion: string;
         foto_url: string | null;
+        telefono: string | null;
+        direccion: string | null;
+        lat: number | null;
+        lng: number | null;
         created_at: string;
       }>;
       productos: Tabla<{
@@ -57,7 +61,9 @@ export interface PegasoTypes {
       }>;
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      eliminar_mi_cuenta: { Args: Record<string, never>; Returns: null };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

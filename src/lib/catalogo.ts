@@ -13,6 +13,10 @@ export interface Cooperativa {
   descripcion: string;
   verificacion: string;
   foto_url: string | null;
+  telefono: string | null;
+  direccion: string | null;
+  lat: number | null;
+  lng: number | null;
   created_at: string;
   productosCount?: number;
 }
@@ -75,6 +79,10 @@ export function useCatalogoVivo(): CatalogoRemoto {
             descripcion: v.descripcion,
             verificacion: v.verificacion,
             foto_url: v.foto_url,
+            telefono: v.telefono ?? null,
+            direccion: v.direccion ?? null,
+            lat: v.lat ?? null,
+            lng: v.lng ?? null,
             created_at: v.created_at,
           });
         }

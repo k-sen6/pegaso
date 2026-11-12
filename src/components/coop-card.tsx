@@ -31,6 +31,7 @@ export function VerificacionBadge({
   verificacion: Cooperativa["verificacion"];
   className?: string;
 }) {
+  if (verificacion !== "verificado") return null;
   const ui = VERIFICACION_UI[verificacion];
   const Icono = ui.icono;
   return (
@@ -82,7 +83,9 @@ export function CoopCard({ cooperativa }: { cooperativa: Cooperativa }) {
       </div>
       <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">{cooperativa.descripcion}</p>
       <p className="mt-auto text-xs text-muted-foreground">
-        {cooperativa.productosCount} productos publicados
+        {typeof cooperativa.productosCount === "number"
+          ? `${cooperativa.productosCount} productos publicados`
+          : "Ver tienda"}
       </p>
     </article>
   );

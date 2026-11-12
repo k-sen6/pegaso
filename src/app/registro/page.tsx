@@ -6,33 +6,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { registrar, type PerfilVendedor } from "@/lib/auth";
-
-const SECTORES = [
-  { valor: "agroalimentario", etiqueta: "Agroalimentario" },
-  { valor: "textil", etiqueta: "Textil" },
-  { valor: "artesania", etiqueta: "Artesanía" },
-  { valor: "servicios", etiqueta: "Servicios" },
-  { valor: "tic", etiqueta: "TIC" },
-] as const;
-
-const PROVINCIAS = [
-  "Pinar del Río",
-  "Artemisa",
-  "La Habana",
-  "Mayabeque",
-  "Matanzas",
-  "Cienfuegos",
-  "Villa Clara",
-  "Sancti Spíritus",
-  "Ciego de Ávila",
-  "Camagüey",
-  "Las Tunas",
-  "Holguín",
-  "Granma",
-  "Santiago de Cuba",
-  "Guantánamo",
-  "Isla de la Juventud",
-] as const;
+import { telefonoValido } from "@/lib/whatsapp";
+import { PROVINCIAS, SECTORES } from "@/lib/perfil-opciones";
 
 export default function PaginaRegistro() {
   const router = useRouter();
@@ -44,6 +19,8 @@ export default function PaginaRegistro() {
     provincia: "La Habana",
     municipio: "",
     descripcion: "",
+    telefono: "",
+    direccion: "",
   });
   const [aviso, setAviso] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +35,14 @@ export default function PaginaRegistro() {
       setError("Completa el nombre de tu tienda y el municipio.");
       return;
     }
+    if (!telefonoValido(perfil.telefono)) {
+      setError("Escribe un WhatsApp válido (8 dígitos, ej. 5 123 4567).");
+      return;
+    }
+    if (!perfil.direccion?.trim()) {
+      setError("Añade una dirección para que los clientes sepan dónde recoger.");
+      return;
+    }
     if (password.length < 6) {
       setError("La contraseña debe tener al menos 6 caracteres.");
       return;
@@ -70,6 +55,8 @@ export default function PaginaRegistro() {
         nombre: perfil.nombre.trim(),
         municipio: perfil.municipio.trim(),
         descripcion: perfil.descripcion.trim(),
+        telefono: perfil.telefono.trim(),
+        direccion: perfil.direccion?.trim(),
       });
       if (requiereConfirmacion) {
         setAviso(
@@ -152,6 +139,36 @@ export default function PaginaRegistro() {
             onChange={(e) => setPerfil({ ...perfil, descripcion: e.target.value })}
             placeholder="Qué vendes y cómo trabajas"
           />
+        </label>
+
+        <label className="grid gap-1.5 text-sm">
+          <span className="font-medium">WhatsApp para clientes</span>
+          <Input
+            type="tel"
+            required
+            value={perfil.telefono}
+            onChange={(e) => setPerfil({ ...perfil, telefono: e.target.value })}
+            placeholder="+53 5 123 4567"
+            autoComplete="tel"
+            inputMode="tel"
+          />
+          <span className="text-xs text-muted-foreground">
+            Será público: los compradores te escriben por aquí.
+          </span>
+        </label>
+
+        <label className="grid gap-1.5 text-sm">
+          <span className="font-medium">Dirección de recogida</span>
+          <Input
+            required
+            value={perfil.direccion ?? ""}
+            onChange={(e) => setPerfil({ ...perfil, direccion: e.target.value })}
+            placeholder="Calle, número, entre calles, referencia"
+            autoComplete="street-address"
+          />
+          <span className="text-xs text-muted-foreground">
+            Puedes ajustar el mapa después desde Mi cuenta.
+          </span>
         </label>
 
         <hr className="my-1 border-border" />
