@@ -39,7 +39,7 @@ export default function PaginaMiCuenta() {
           Sube productos con imagen, precio y descripción. Se guardan en tu catálogo y se ven en la tienda.
         </p>
         <div className="mt-4">
-          <PanelProductosVendedor />
+          <PanelProductosVendedor mostrarTitulo={false} />
         </div>
       </section>
     </div>

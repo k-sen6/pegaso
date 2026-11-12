@@ -38,6 +38,7 @@ interface VendedorEstado {
 
 export default function VendedorClient() {
   const [slug, setSlug] = useState("");
+  const [fotos, setFotos] = useState<Map<string, string>>(new Map());
   const [estado, setEstado] = useState<VendedorEstado>({
     cooperativa: null,
     productos: [],
@@ -66,6 +67,26 @@ export default function VendedorClient() {
           .eq("vendedor_id", ven.id)
           .order("destacado", { ascending: false });
         if (!vivo) return;
+
+        const mapaFotos = new Map<string, string>();
+        if (prods && prods.length > 0) {
+          const { data: fotosData } = await supabase
+            .from("fotos")
+            .select("producto_id, url, created_at")
+            .eq("estado", "sincronizada")
+            .in(
+              "producto_id",
+              prods.map((p) => p.id)
+            )
+            .order("created_at", { ascending: false });
+          for (const f of fotosData ?? []) {
+            if (f.producto_id && f.url && !mapaFotos.has(f.producto_id)) {
+              mapaFotos.set(f.producto_id, f.url);
+            }
+          }
+        }
+        setFotos(mapaFotos);
+
         setEstado({
           cooperativa: {
             id: ven.id,
@@ -185,7 +206,7 @@ export default function VendedorClient() {
                 key={p.id}
                 producto={p}
                 cooperativa={c}
-                fotoUrl={null}
+                fotoUrl={fotos.get(p.id) ?? null}
               />
             ))}
           </div>

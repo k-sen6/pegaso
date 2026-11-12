@@ -57,7 +57,11 @@ function GrupoFiltro({
 }
 
 export function Catalogo() {
-  const { productos: PRODUCTOS, cooperativas } = useCatalogoVivo();
+  const {
+    productos: PRODUCTOS,
+    cooperativas,
+    fotosPorProducto,
+  } = useCatalogoVivo();
   const [texto, setTexto] = useState("");
   const [sector, setSectorq] = useState<"todos" | Sector>("todos");
   const [provincia, setProvincia] = useState("todas");
@@ -224,6 +228,7 @@ export function Catalogo() {
                 key={producto.id}
                 producto={producto}
                 cooperativa={coop}
+                fotoUrl={fotosPorProducto.get(producto.id) ?? null}
               />
             );
           })}
