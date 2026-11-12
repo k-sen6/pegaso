@@ -114,6 +114,17 @@ export async function registrar(
     return { requiereConfirmacion: false };
   }
 
+  // Si el backend no devuelve sesión (p. ej. "Confirm email" activo), pero el
+  // usuario ya quedó confirmado, intentamos entrar de inmediato.
+  const { data: login, error: errLogin } = await supabase.auth.signInWithPassword(
+    { email, password }
+  );
+  if (!errLogin && login.user) {
+    await asegurarPerfilVendedor(login.user, perfil);
+    limpiarBorradorPerfil();
+    return { requiereConfirmacion: false };
+  }
+
   guardarBorradorPerfil(email, perfil);
   return { requiereConfirmacion: true };
 }
