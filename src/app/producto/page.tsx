@@ -55,6 +55,7 @@ export default function FichaProducto() {
           .maybeSingle();
         if (!vivo) return;
 setEstado({
+          vivo: true,
           producto: {
             id: prod.id,
             slug: prod.slug,
@@ -135,7 +136,7 @@ setEstado({
             {p.nombre}
           </h1>
           <p className="mt-2 text-3xl font-bold tracking-tight text-primary">
-            {formatoPrecioCup(p.precioCup)}
+            {formatoPrecioCup(p.precio_cup)}
           </p>
           <p className="mt-3 text-pretty text-sm leading-relaxed text-muted-foreground">
             {p.descripcion}
@@ -173,7 +174,7 @@ setEstado({
           </div>
 
           <div className="mt-6">
-            <BotonesReservar producto={{ id: p.id, slug: p.slug, nombre: p.nombre, precioCup: p.precioCup }} />
+            <BotonesReservar producto={{ id: p.id, slug: p.slug, nombre: p.nombre, precioCup: p.precio_cup }} />
           </div>
         </div>
       </div>
