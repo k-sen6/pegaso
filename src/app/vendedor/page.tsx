@@ -76,8 +76,8 @@ export default function VendedorClient() {
             municipio: ven.municipio,
             descripcion: ven.descripcion,
             verificacion: ven.verificacion,
-            nivel: "basico",
-            productosCount: (prods ?? []).length,
+            foto_url: ven.foto_url,
+            created_at: ven.created_at,
           },
           productos: (prods ?? []).map((p) => ({
             id: p.id,
@@ -87,9 +87,9 @@ export default function VendedorClient() {
             precio_cup: p.precio_cup,
             sector: p.sector,
             destacado: p.destacado,
-            emoji: "▦",
             hue: p.hue ?? 225,
-            cooperativaId: ven.id,
+            vendedor_id: p.vendedor_id,
+            created_at: p.created_at,
           })),
           vivo: true,
         });

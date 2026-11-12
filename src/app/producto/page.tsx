@@ -67,8 +67,6 @@ setEstado({
             hue: prod.hue ?? 225,
             vendedor_id: prod.vendedor_id,
             created_at: prod.created_at,
-            emoji: "▦",
-            cooperativaId: prod.vendedor_id,
           },
           cooperativa: ven
             ? {
@@ -174,7 +172,7 @@ setEstado({
           </div>
 
           <div className="mt-6">
-            <BotonesReservar producto={{ id: p.id, slug: p.slug, nombre: p.nombre, precioCup: p.precio_cup }} />
+            <BotonesReservar producto={{ id: p.id, slug: p.slug, nombre: p.nombre, precio_cup: p.precio_cup }} />
           </div>
         </div>
       </div>

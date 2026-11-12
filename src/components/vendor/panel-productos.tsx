@@ -27,7 +27,7 @@ const SECTOR_LABELS: Record<string, string> = {
 interface ProductoForm {
   nombre: string;
   descripcion: string;
-  precioCup: number;
+  precio_cup: number;
   sector: string;
   destacado: boolean;
   imagen: File | null;
@@ -58,7 +58,7 @@ export default function PanelProductosVendedor() {
   const [form, setForm] = useState<ProductoForm>({
     nombre: "",
     descripcion: "",
-    precioCup: 0,
+    precio_cup: 0,
     sector: "agroalimentario",
     destacado: false,
     imagen: null,
@@ -106,7 +106,7 @@ export default function PanelProductosVendedor() {
     setForm({
       nombre: "",
       descripcion: "",
-      precioCup: 0,
+      precio_cup: 0,
       sector: "agroalimentario",
       destacado: false,
       imagen: null,
@@ -128,7 +128,7 @@ export default function PanelProductosVendedor() {
     setForm({
       nombre: p.nombre,
       descripcion: p.descripcion,
-      precioCup: p.precio_cup,
+      precio_cup: p.precio_cup,
       sector: p.sector,
       destacado: p.destacado,
       imagen: null,
@@ -178,7 +178,7 @@ export default function PanelProductosVendedor() {
       setError("El nombre es obligatorio.");
       return;
     }
-    if (!form.precioCup || form.precioCup <= 0) {
+    if (!form.precio_cup || form.precio_cup <= 0) {
       setError("El precio debe ser mayor a 0.");
       return;
     }
@@ -217,7 +217,7 @@ export default function PanelProductosVendedor() {
       const productoData = {
         nombre: form.nombre.trim(),
         descripcion: form.descripcion.trim(),
-        precio_cup: form.precioCup,
+        precio_cup: form.precio_cup,
         sector: form.sector,
         destacado: form.destacado,
         vendedor_id: user.id,
@@ -439,8 +439,8 @@ export default function PanelProductosVendedor() {
                   <Input
                     type="number"
                     min="0"
-                    value={form.precioCup}
-                    onChange={(e) => setForm({ ...form, precioCup: Number(e.target.value) || 0 })}
+                    value={form.precio_cup}
+                    onChange={(e) => setForm({ ...form, precio_cup: Number(e.target.value) || 0 })}
                     placeholder="0"
                     className="h-[44px] rounded-lg border bg-card px-4 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   />

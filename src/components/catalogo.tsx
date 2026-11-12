@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
 import { EmptyState } from "@/components/empty-state";
-import { useCatalogoVivo } from "@/lib/catalogo";
+import { useCatalogoVivo, Sector } from "@/lib/catalogo";
 import { cn } from "cn";
 
 type Orden = "relevancia" | "precio-asc" | "precio-desc" | "nombre";
@@ -59,7 +59,7 @@ function GrupoFiltro({
 export function Catalogo() {
   const { productos: PRODUCTOS, cooperativas } = useCatalogoVivo();
   const [texto, setTexto] = useState("");
-  const [sector, setSectorq] = useState<"todos">("todos");
+  const [sector, setSectorq] = useState<"todos" | Sector>("todos");
   const [provincia, setProvincia] = useState("todas");
   const [precioMax, setPrecioMax] = useState<null | number>(null);
   const [orden, setOrden] = useState<Orden>("relevancia");
@@ -69,7 +69,7 @@ export function Catalogo() {
       Array.from(
         new Set(
           PRODUCTOS.map(
-            (p) => cooperativas.get(p.cooperativaId)?.provincia
+            (p) => cooperativas.get(p.vendedor_id)?.provincia
           ).filter(Boolean)
         )
       ).sort() as string[],
@@ -79,11 +79,11 @@ export function Catalogo() {
   const listados = useMemo(() => {
     const t = texto.trim().toLowerCase();
     const filtrados = PRODUCTOS.filter((producto) => {
-      const coop = cooperativas.get(producto.cooperativaId);
+      const coop = cooperativas.get(producto.vendedor_id);
       if (!coop || coop.verificacion === "rechazado") return false;
       if (sector !== "todos" && producto.sector !== sector) return false;
       if (provincia !== "todas" && coop.provincia !== provincia) return false;
-      if (precioMax !== null && producto.precioCup > precioMax) return false;
+      if (precioMax !== null && producto.precio_cup > precioMax) return false;
       if (
         t &&
         !`${producto.nombre} ${producto.descripcion}`.toLowerCase().includes(t)
@@ -94,9 +94,9 @@ export function Catalogo() {
     const ordenados = [...filtrados].sort((a, b) => {
       switch (orden) {
         case "precio-asc":
-          return a.precioCup - b.precioCup;
+          return a.precio_cup - b.precio_cup;
         case "precio-desc":
-          return b.precioCup - a.precioCup;
+          return b.precio_cup - a.precio_cup;
         case "nombre":
           return a.nombre.localeCompare(b.nombre, "es");
         default:
@@ -145,7 +145,7 @@ export function Catalogo() {
         <GrupoFiltro
           titulo="Sector"
           activo={sector}
-          alCambiar={(v) => setSectorq(v as "todos" | Sector)}
+          alCambiar={(v) => setSectorq(v)}
           opciones={[
             { valor: "todos", etiqueta: "Todos" },
             { valor: "agroalimentario", etiqueta: "Agroalimentario" },
@@ -218,7 +218,7 @@ export function Catalogo() {
       {listados.length > 0 ? (
         <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
           {listados.map((producto) => {
-            const coop = cooperativas.get(producto.cooperativaId)!;
+            const coop = cooperativas.get(producto.vendedor_id)!;
             return (
               <ProductCard
                 key={producto.id}

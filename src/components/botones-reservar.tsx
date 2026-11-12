@@ -12,7 +12,7 @@ export interface ProductoReserva {
   id: string;
   slug: string;
   nombre: string;
-  precioCup: number;
+  precio_cup: number;
 }
 
 /**

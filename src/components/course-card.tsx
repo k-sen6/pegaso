@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { Clock, FileDown } from "lucide-react";
-import type { Curso } from "@/lib/mock";
 import { cn } from "cn";
 
-const NIVEL_CLASE: Record<Curso["nivel"], string> = {
+const NIVEL_CLASE: Record<string, string> = {
   basico: "border-info/40 text-info bg-info/10",
   intermedio: "border-warning/40 text-warning bg-warning/10",
   avanzado: "border-destructive/40 text-destructive bg-destructive/10",

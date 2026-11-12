@@ -14,6 +14,7 @@ export interface Cooperativa {
   verificacion: string;
   foto_url: string | null;
   created_at: string;
+  productosCount?: number;
 }
 
 export type Sector = string;
@@ -30,9 +31,6 @@ export interface Producto {
   hue: number;
   vendedor_id: string;
   created_at: string;
-  precioCup?: number;
-  emoji?: string;
-  cooperativaId?: string;
 }
 
 export interface CatalogoRemoto {

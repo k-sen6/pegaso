@@ -32,7 +32,7 @@ export function ProductCard({
       <Link
         href={`/producto?slug=${producto.slug}`}
         className="block focus-visible:outline-none"
-        aria-label={`${producto.nombre}, ${formatoPrecioCup(producto.precioCup)}`}
+        aria-label={`${producto.nombre}, ${formatoPrecioCup(producto.precio_cup)}`}
       >
         <PortadaOptin
           temaId="generica"
@@ -57,7 +57,7 @@ export function ProductCard({
         </h3>
         <div className="flex items-baseline gap-2">
           <p className="text-2xl font-bold leading-none text-primary">
-            {formatoPrecioCup(producto.precioCup)}
+            {formatoPrecioCup(producto.precio_cup)}
           </p>
           {verificado && (
             <BadgeCheck className="size-4 shrink-0 text-success" aria-label="Vendedor verificado" />
