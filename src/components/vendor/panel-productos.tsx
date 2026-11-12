@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { comprimirFoto, formatoPeso } from "@/lib/compresor";
+import { asegurarPerfilVendedor } from "@/lib/auth";
 import { cn } from "cn";
 
 const SECTORES = [
@@ -23,6 +24,16 @@ const SECTOR_LABELS: Record<string, string> = {
   servicios: "Servicios",
   tic: "TIC",
 };
+
+function slugProducto(nombre: string): string {
+  const base = nombre
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return `${base || "producto"}-${Date.now().toString(36)}`;
+}
 
 interface ProductoForm {
   nombre: string;
@@ -92,9 +103,11 @@ export default function PanelProductosVendedor() {
     }
     setCargando(true);
     try {
+      const vendedorId = await asegurarPerfilVendedor(user, null);
       const { data, error } = await sb
         .from("productos")
         .select("*")
+        .eq("vendedor_id", vendedorId)
         .order("created_at", { ascending: false });
       if (error) throw error;
       setProductos(data ?? []);
@@ -190,10 +203,17 @@ export default function PanelProductosVendedor() {
       setError("Backend no disponible.");
       return;
     }
-    // Obtener usuario autenticado
-    const { data: { user} } = await sb.auth.getUser();
+    // Obtener usuario autenticado y su vendedor asociado
+    const { data: { user } } = await sb.auth.getUser();
     if (!user) {
       setError("No hay sesión de usuario activa.");
+      return;
+    }
+    let vendedorId: string;
+    try {
+      vendedorId = await asegurarPerfilVendedor(user, null);
+    } catch {
+      setError("No se pudo preparar tu perfil de vendedor.");
       return;
     }
     setSubiendo(true);
@@ -223,7 +243,7 @@ export default function PanelProductosVendedor() {
         precio_cup: form.precio_cup,
         sector: form.sector,
         destacado: form.destacado,
-        vendedor_id: user.id,
+        vendedor_id: vendedorId,
       };
 
       if (editandoId) {
@@ -242,7 +262,7 @@ export default function PanelProductosVendedor() {
       } else {
         const { data: nuevo, error: err } = await sb
           .from("productos")
-          .insert(productoData)
+          .insert({ ...productoData, slug: slugProducto(form.nombre) })
           .select()
           .single();
         if (err) throw err;

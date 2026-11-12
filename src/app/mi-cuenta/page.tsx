@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { TicketIcon, UploadCloud } from "lucide-react";
 import { MisReservas } from "@/components/mis-reservas";
+import { SesionPanel } from "@/components/sesion-panel";
 import PanelProductosVendedor from "@/components/vendor/panel-productos";
 
 export const metadata = { title: "Mi cuenta" };
@@ -10,8 +11,10 @@ export default function PaginaMiCuenta() {
     <div className="mx-auto max-w-2xl px-4 py-8">
       <h1 className="text-2xl font-bold tracking-tight">Mi cuenta</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Perfil y configuración completos llegan con la autenticación (Iteración 4).
+        Perfil, reservas y productos de tu tienda.
       </p>
+
+      <SesionPanel />
 
       <section className="mt-8" aria-labelledby="reservas">
         <h2 id="reservas" className="flex items-center gap-2 text-lg font-bold tracking-tight">

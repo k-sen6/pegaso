@@ -20,7 +20,7 @@ export function Footer() {
           <p className="font-medium text-foreground">Sitio</p>
           {[
             { href: "/productos", label: "Productos", Icono: Package },
-            { href: "/cooperativas", label: "Vendedores", Icono: ShieldCheck },
+            { href: "/vendedores", label: "Vendedores", Icono: ShieldCheck },
             { href: "/formacion", label: "Formación", Icono: BookOpen },
             { href: "/financiamiento", label: "Financiamiento", Icono: Landmark },
           ].map(({ href, label, Icono }) => (

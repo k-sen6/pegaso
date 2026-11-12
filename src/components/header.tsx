@@ -9,11 +9,12 @@ import { ConnectionIndicator } from "@/components/connection-indicator";
 import { ToggleTema } from "@/components/toggle-tema";
 import { ToggleImagenes } from "@/components/toggle-imagenes";
 import { cn } from "cn";
+import { useSesion } from "@/lib/auth";
 
 const NAV = [
   { href: "/", label: "Inicio" },
   { href: "/productos", label: "Productos" },
-  { href: "/cooperativas", label: "Vendedores" },
+  { href: "/vendedores", label: "Vendedores" },
   { href: "/formacion", label: "Formación" },
   { href: "/financiamiento", label: "Financiamiento" },
 ];
@@ -21,6 +22,8 @@ const NAV = [
 export function Header() {
   const pathname = usePathname() ?? "/";
   const [abierto, setAbierto] = useState(false);
+  const { session } = useSesion();
+  const hrefCuenta = session ? "/mi-cuenta" : "/entrar";
 
   const activa = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -59,8 +62,8 @@ export function Header() {
             <ToggleImagenes />
             <ToggleTema />
             <Link
-              href="/mi-cuenta"
-              aria-label="Mi cuenta"
+              href={hrefCuenta}
+              aria-label={session ? "Mi cuenta" : "Iniciar sesión"}
               className="inline-flex size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               <CircleUserRound className="size-5" aria-hidden="true" />
@@ -73,8 +76,8 @@ export function Header() {
           <ToggleImagenes className="hidden sm:inline-flex" />
           <ToggleTema className="hidden sm:inline-flex" />
           <Link
-            href="/mi-cuenta"
-            aria-label="Mi cuenta"
+            href={hrefCuenta}
+            aria-label={session ? "Mi cuenta" : "Iniciar sesión"}
             className="inline-flex size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <CircleUserRound className="size-5" aria-hidden="true" />
