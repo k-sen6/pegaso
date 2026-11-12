@@ -12,12 +12,14 @@ import { cn } from "cn";
  * el fondo continúa visible.
  */
 export function PortadaOptin({
+  temaId,
   hue,
   nombre,
   priorizar,
   className,
   fotoUrl,
 }: {
+  temaId: string;
   hue: number;
   nombre: string;
   priorizar?: boolean;

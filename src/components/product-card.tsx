@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { BadgeCheck, MapPin, Heart } from "lucide-react";
-import type { Producto } from "@/lib/catalogo";
+import type { Cooperativa, Producto } from "@/lib/catalogo";
 import { formatoPrecioCup } from "@/lib/precio";
 import { cn } from "cn";
 import { PortadaOptin } from "@/components/portada-optin";

@@ -8,7 +8,9 @@ import { PortadaOptin } from "@/components/portada-optin";
  * Portada de la ficha: foto subida por el vendedor (Supabase) si existe;
  * si no, la AVIF temática local. Offline: siempre la local.
  */
-export function FotoFicha({ producto }: { producto: { id: string; slug: string; hue?: number } }) {
+import type { Producto } from "@/lib/catalogo";
+
+export function FotoFicha({ producto }: { producto: Producto }) {
   const [fotoUrl, setFotoUrl] = useState<string | null>(null);
 
   useEffect(() => {

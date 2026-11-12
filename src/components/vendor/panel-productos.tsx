@@ -77,13 +77,16 @@ export default function PanelProductosVendedor() {
   }, []);
 
   async function cargar() {
-    if (!session?.user) {
-      setProductos([]);
+    const sb = supabase;
+    if (!sb) {
       setCargando(false);
       return;
     }
-    const sb = supabase;
-    if (!sb) {
+    const {
+      data: { user },
+    } = await sb.auth.getUser();
+    if (!user) {
+      setProductos([]);
       setCargando(false);
       return;
     }
