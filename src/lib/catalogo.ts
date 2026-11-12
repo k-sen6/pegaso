@@ -31,6 +31,8 @@ export interface Producto {
   vendedor_id: string;
   created_at: string;
   precioCup?: number;
+  emoji?: string;
+  cooperativaId?: string;
 }
 
 export interface CatalogoRemoto {

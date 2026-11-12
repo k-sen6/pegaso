@@ -54,17 +54,19 @@ export default function FichaProducto() {
           .eq("id", prod.vendedor_id)
           .maybeSingle();
         if (!vivo) return;
-        setEstado({
+setEstado({
           producto: {
             id: prod.id,
             slug: prod.slug,
             nombre: prod.nombre,
             descripcion: prod.descripcion,
-            precioCup: prod.precio_cup,
+            precio_cup: prod.precio_cup,
             sector: prod.sector as Sector,
             destacado: prod.destacado,
-            emoji: "▦",
             hue: prod.hue ?? 225,
+            vendedor_id: prod.vendedor_id,
+            created_at: prod.created_at,
+            emoji: "▦",
             cooperativaId: prod.vendedor_id,
           },
           cooperativa: ven
@@ -77,11 +79,10 @@ export default function FichaProducto() {
                 municipio: ven.municipio,
                 descripcion: ven.descripcion,
                 verificacion: ven.verificacion as EstadoVerificacion,
-                nivel: "basico",
-                productosCount: 0,
+                foto_url: ven.foto_url,
+                created_at: ven.created_at,
               }
             : null,
-          vivo: true,
         });
       } catch {
         // sin red: queda vacío (offline-first)
