@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { CoopCard } from "@/components/coop-card";
 import { EmptyState } from "@/components/empty-state";
 import { supabase } from "@/lib/supabase";
-import type { Cooperativa } from "@/lib/catalogo";
+import type { Cooperativa, Sector } from "@/lib/catalogo";
 import { cn } from "cn";
 
 type Filtro = "todos" | Sector;

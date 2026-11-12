@@ -8,13 +8,13 @@ const NIVEL_CLASE: Record<string, string> = {
   avanzado: "border-destructive/40 text-destructive bg-destructive/10",
 };
 
-const FORMATO_TXT: Record<Curso["formato"], string> = {
+const FORMATO_TXT: Record<string, string> = {
   presencial: "Presencial",
   "semi-presencial": "Semi-presencial",
   virtual: "Virtual",
 };
 
-export function CourseCard({ curso }: { curso: Curso }) {
+export function CourseCard({ curso }: { curso: { slug: string; descripcion: string; duracionHoras: number; nivel: string; formato: string; titulo: string; descargable: boolean } }) {
   return (
     <article className="group flex flex-col gap-2 rounded-xl border bg-card p-4 shadow-[var(--shadow-card)] transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg">
       <div className="flex items-center gap-2">
