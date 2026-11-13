@@ -45,26 +45,7 @@ jobs:
       - name: Sincronizar Android
         run: npx cap sync android
 
-      - name: Preparar firma
-        run: |
-          echo "$PEGA_RELEASE_KEY_BASE64" | base64 -d > "$RUNNER_TEMP/pegaso-release.jks"
-          echo "PEGA_KEYSTORE_PATH=$RUNNER_TEMP/pegaso-release.jks" >> "$GITHUB_ENV"
-        env:
-          PEGA_RELEASE_KEY_BASE64: ${{ secrets.PEGA_RELEASE_KEY_BASE64 }}
-
-      - name: Version y firma
+      - name: Version
         run: |
           echo "PEGA_VERSION_CODE=${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            echo "PEGA_VERSION_NAME=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
-          else
-            echo "PEGA_VERSION_NAME=1.0.0-dev.${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
-          fi
-
-      - name: Compilar APK release
-        working-directory: android
-        run: ./gradlew assembleRelease --no-daemon
-        env:
-          PEGA_KEY_STORE_PASSWORD: ${{ secrets.PEGA_RELEASE_KEY_STORE_PASSWORD }}
-          PEGA_KEY_KEY_PASSWORD: ${{ secrets.PEGA_RELEASE_KEY_KEY_PASSWORD }}
-          PEGA_KEY_ALIAS: ${{ secrets.PEGA_RELEASE_KEY_ALIAS }}
+          echo "PEGA_VERSION_NAME=1.0.0-dev.${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
