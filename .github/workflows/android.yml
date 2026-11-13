@@ -49,3 +49,9 @@ jobs:
         run: |
           echo "PEGA_VERSION_CODE=${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
           echo "PEGA_VERSION_NAME=1.0.0-dev.${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
+      - name: Preparar firma
+        run: |
+          echo "$PEGA_RELEASE_KEY_BASE64" | base64 -d > "$RUNNER_TEMP/pegaso-release.jks"
+          echo "PEGA_KEYSTORE_PATH=$RUNNER_TEMP/pegaso-release.jks" >> "$GITHUB_ENV"
+        env:
+          PEGA_RELEASE_KEY_BASE64: ${{ secrets.PEGA_RELEASE_KEY_BASE64 }}
