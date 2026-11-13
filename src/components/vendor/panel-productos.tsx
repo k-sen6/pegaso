@@ -669,6 +669,11 @@ export default function PanelProductosVendedor({
               Se borrará «{aBorrar.nombre}» y su foto. Esta acción no se puede
               deshacer.
             </p>
+            {error && (
+              <p className="mt-3 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {error}
+              </p>
+            )}
             <div className="mt-5 grid grid-cols-2 gap-3">
               <Button
                 type="button"
