@@ -45,3 +45,6 @@ android/build/
 android/.gradle/
 android/local.properties
 android/capacitor-cordova-android-plugins/build/
+
+# APK local
+/pegaso.apk
