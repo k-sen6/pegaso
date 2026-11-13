@@ -55,6 +55,7 @@ export interface Pendiente {
   tipo: "producto-crear" | "producto-editar" | "producto-borrar";
   datos: Record<string, unknown>;
   productoId?: string;
+  fotoId?: string;
   foto?: {
     full: Blob;
     card: Blob;

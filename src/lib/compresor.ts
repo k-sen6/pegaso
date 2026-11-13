@@ -1,6 +1,12 @@
 // Compresión de fotos en el propio dispositivo, antes de cualquier red.
 // Resultado: WebP ≤ 1280 px en su lado largo (~120–200 KB típico),
 // para que la subida posterior por señal móvil sea liviana.
+//
+// La compresión corre en un Web Worker cuando el WebView lo permite, para que
+// el modal no se congele con fotos grandes. Si el worker falla o no existe,
+// se usa el mismo proceso en el hilo principal con tiempos límite.
+
+import { conTiempo, nuevoId } from "@/lib/ids";
 
 export interface FotoComprimida {
   /** Versión principal (máx 1280 px, WebP) para el detalle */
@@ -25,6 +31,147 @@ const MAX_CARD = 640;
 const MAX_THUMB = 320;
 const MAX_MINI = 480;
 
+const CODIGO_WORKER = `
+self.onmessage = async function (ev) {
+  var d = ev.data || {};
+  var id = d.id;
+  try {
+    var bmp = await createImageBitmap(d.file);
+    function lienzo(maxLado) {
+      var escala = Math.min(1, maxLado / Math.max(bmp.width, bmp.height));
+      var w = Math.max(1, Math.round(bmp.width * escala));
+      var h = Math.max(1, Math.round(bmp.height * escala));
+      var c = new OffscreenCanvas(w, h);
+      var ctx = c.getContext("2d");
+      if (!ctx) throw new Error("No se pudo preparar el lienzo.");
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(bmp, 0, 0, w, h);
+      return { c: c, w: w, h: h };
+    }
+    async function aBlob(c, tipo, calidad) {
+      try {
+        return await c.convertToBlob({ type: tipo, quality: calidad });
+      } catch (e) {
+        return await c.convertToBlob({ type: "image/jpeg", quality: Math.min(0.9, calidad + 0.07) });
+      }
+    }
+    var principal = lienzo(d.max);
+    var card = lienzo(d.card);
+    var thumb = lienzo(d.thumb);
+    var mini = lienzo(d.mini);
+    var blob = await aBlob(principal.c, "image/webp", 0.78);
+    var cardBlob = await aBlob(card.c, "image/webp", 0.75);
+    var thumbBlob = await aBlob(thumb.c, "image/webp", 0.7);
+    var miniBlob = await aBlob(mini.c, "image/jpeg", 0.65);
+    var miniatura = "";
+    try {
+      miniatura = new FileReaderSync().readAsDataURL(miniBlob);
+    } catch (e) {
+      miniatura = "";
+    }
+    bmp.close && bmp.close();
+    self.postMessage({
+      id: id,
+      ok: true,
+      blob: blob,
+      cardBlob: cardBlob,
+      thumbBlob: thumbBlob,
+      miniatura: miniatura,
+      pesoBytes: blob.size,
+      pesoCard: cardBlob.size,
+      pesoThumb: thumbBlob.size,
+      pesoOriginal: d.file.size,
+      ancho: principal.w,
+      alto: principal.h
+    });
+  } catch (e) {
+    self.postMessage({ id: id, ok: false, error: String((e && e.message) || e) });
+  }
+};
+`;
+
+function comprimirEnWorker(file: File): Promise<FotoComprimida> {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(
+      new Blob([CODIGO_WORKER], { type: "text/javascript" })
+    );
+    const id = nuevoId();
+    let worker: Worker | null = null;
+    let terminado = false;
+    let temporizador = 0;
+
+    const cerrar = (error?: Error, valor?: FotoComprimida) => {
+      if (terminado) return;
+      terminado = true;
+      clearTimeout(temporizador);
+      worker?.terminate();
+      worker = null;
+      URL.revokeObjectURL(url);
+      if (valor) res(valor);
+      else rej(error ?? new Error("No se pudo comprimir la imagen."));
+    };
+
+    temporizador = window.setTimeout(
+      () => cerrar(new Error("La imagen tardó demasiado en procesarse.")),
+      20000
+    );
+
+    try {
+      worker = new Worker(url);
+    } catch (e) {
+      cerrar(e instanceof Error ? e : new Error("Worker no disponible."));
+      return;
+    }
+
+    worker.onmessage = (ev: MessageEvent) => {
+      const d = ev.data as {
+        id?: string;
+        ok?: boolean;
+        error?: string;
+        blob?: Blob;
+        cardBlob?: Blob;
+        thumbBlob?: Blob;
+        miniatura?: string;
+        pesoBytes?: number;
+        pesoCard?: number;
+        pesoThumb?: number;
+        pesoOriginal?: number;
+        ancho?: number;
+        alto?: number;
+      };
+      if (!d || d.id !== id) return;
+      if (!d.ok || !d.blob || !d.cardBlob || !d.thumbBlob) {
+        cerrar(new Error(d.error || "No se pudo comprimir la imagen."));
+        return;
+      }
+      cerrar(undefined, {
+        blob: d.blob,
+        cardBlob: d.cardBlob,
+        thumbBlob: d.thumbBlob,
+        miniatura: d.miniatura ?? "",
+        pesoBytes: d.pesoBytes ?? d.blob.size,
+        pesoCard: d.pesoCard ?? d.cardBlob.size,
+        pesoThumb: d.pesoThumb ?? d.thumbBlob.size,
+        pesoOriginal: d.pesoOriginal ?? file.size,
+        ancho: d.ancho ?? 0,
+        alto: d.alto ?? 0,
+      });
+    };
+    worker.onerror = (ev) => {
+      cerrar(new Error(ev.message || "No se pudo comprimir la imagen."));
+    };
+    worker.postMessage({
+      id,
+      file,
+      max: MAX_LADO,
+      card: MAX_CARD,
+      thumb: MAX_THUMB,
+      mini: MAX_MINI,
+    });
+  });
+}
+
 interface Fuente {
   ancho: number;
   alto: number;
@@ -39,7 +186,11 @@ interface Fuente {
  */
 async function decodificar(file: File): Promise<Fuente> {
   try {
-    const bmp = await createImageBitmap(file);
+    const bmp = await conTiempo(
+      createImageBitmap(file),
+      12000,
+      "La imagen tardó demasiado en abrirse."
+    );
     return {
       ancho: bmp.width,
       alto: bmp.height,
@@ -49,17 +200,21 @@ async function decodificar(file: File): Promise<Fuente> {
   } catch {
     const url = URL.createObjectURL(file);
     try {
-      const img = await new Promise<HTMLImageElement>((res, rej) => {
-        const i = new Image();
-        i.onload = () => res(i);
-        i.onerror = () =>
-          rej(
-            new Error(
-              "No se pudo leer la imagen. Prueba con JPG o PNG desde la galería."
-            )
-          );
-        i.src = url;
-      });
+      const img = await conTiempo(
+        new Promise<HTMLImageElement>((res, rej) => {
+          const i = new Image();
+          i.onload = () => res(i);
+          i.onerror = () =>
+            rej(
+              new Error(
+                "No se pudo leer la imagen. Prueba con JPG o PNG desde la galería."
+              )
+            );
+          i.src = url;
+        }),
+        15000,
+        "La imagen tardó demasiado en abrirse."
+      );
       return {
         ancho: img.naturalWidth || img.width,
         alto: img.naturalHeight || img.height,
@@ -78,7 +233,8 @@ function dibujarAjustado(fuente: Fuente, maxLado: number): HTMLCanvasElement {
   const lienzo = document.createElement("canvas");
   lienzo.width = ancho;
   lienzo.height = alto;
-  const ctx = lienzo.getContext("2d")!;
+  const ctx = lienzo.getContext("2d");
+  if (!ctx) throw new Error("No se pudo preparar el lienzo.");
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
   fuente.dibujar(ctx, ancho, alto);
@@ -116,17 +272,11 @@ async function blobWebp(
   );
 }
 
-/**
- * Comprime un File de cámara/galería.
- * Lanza Error con mensaje en español si el formato no es imagen o no se puede leer.
- */
-export async function comprimirFoto(file: File): Promise<FotoComprimida> {
-  if (!file.type.startsWith("image/") && !/\.(heic|heif)$/i.test(file.name)) {
-    throw new Error("El archivo no es una imagen.");
-  }
-
+async function comprimirEnHilo(file: File): Promise<FotoComprimida> {
   const fuente = await decodificar(file);
   try {
+    // Deja pintar el spinner antes de bloquear con el dibujado.
+    await new Promise((r) => setTimeout(r, 30));
     const lienzo = dibujarAjustado(fuente, MAX_LADO);
     const card = dibujarAjustado(fuente, MAX_CARD);
     const thumb = dibujarAjustado(fuente, MAX_THUMB);
@@ -154,6 +304,30 @@ export async function comprimirFoto(file: File): Promise<FotoComprimida> {
   } finally {
     fuente.liberar?.();
   }
+}
+
+/**
+ * Comprime un File de cámara/galería.
+ * Lanza Error con mensaje en español si el formato no es imagen o no se puede leer.
+ */
+export async function comprimirFoto(file: File): Promise<FotoComprimida> {
+  if (!file.type.startsWith("image/") && !/\.(heic|heif)$/i.test(file.name)) {
+    throw new Error("El archivo no es una imagen.");
+  }
+
+  const puedeWorker =
+    typeof Worker !== "undefined" &&
+    typeof OffscreenCanvas !== "undefined" &&
+    typeof createImageBitmap !== "undefined";
+
+  if (puedeWorker) {
+    try {
+      return await comprimirEnWorker(file);
+    } catch {
+      // El worker no pudo (WebView viejo, CSP o imagen rara): seguimos abajo.
+    }
+  }
+  return comprimirEnHilo(file);
 }
 
 export function formatoPeso(bytes: number): string {

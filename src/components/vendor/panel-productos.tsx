@@ -22,6 +22,7 @@ import { nuevoPendiente, procesarPendientes } from "@/lib/outbox";
 import { guardarPendiente, listarPendientes } from "@/lib/db-local";
 import { sincronizarCatalogo } from "@/lib/catalogo";
 import { rutaLocal } from "@/lib/base";
+import { conTiempo, esDuplicado, nuevoId } from "@/lib/ids";
 import { formatoPrecioCup } from "@/lib/precio";
 import { cn } from "cn";
 import { SECTORES, SECTOR_LABELS } from "@/lib/perfil-opciones";
@@ -47,6 +48,7 @@ interface ProductoForm {
   blob: Blob | null;
   cardBlob: Blob | null;
   thumbBlob: Blob | null;
+  fotoId: string | null;
   pesoBytes: number;
   pesoCard: number;
   pesoThumb: number;
@@ -79,6 +81,7 @@ const FORM_VACIO: ProductoForm = {
   blob: null,
   cardBlob: null,
   thumbBlob: null,
+  fotoId: null,
   pesoBytes: 0,
   pesoCard: 0,
   pesoThumb: 0,
@@ -106,9 +109,14 @@ export default function PanelProductosVendedor({
   const [errorImagen, setErrorImagen] = useState<string | null>(null);
   const [pendientes, setPendientes] = useState(0);
   const [arrastrando, setArrastrando] = useState(false);
+  const [aBorrar, setABorrar] = useState<ProductoRow | null>(null);
+  const [borrando, setBorrando] = useState(false);
 
   const inputGaleria = useRef<HTMLInputElement>(null);
   const inputCamara = useRef<HTMLInputElement>(null);
+  const guardandoRef = useRef(false);
+  const borrandoRef = useRef(false);
+  const comprimiendoRef = useRef(false);
 
   useEffect(() => {
     cargar();
@@ -154,6 +162,15 @@ export default function PanelProductosVendedor({
       window.removeEventListener("keydown", alEscape);
     };
   }, [abierto]);
+
+  useEffect(() => {
+    if (!aBorrar) return;
+    const alEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !borrandoRef.current) setABorrar(null);
+    };
+    window.addEventListener("keydown", alEscape);
+    return () => window.removeEventListener("keydown", alEscape);
+  }, [aBorrar]);
 
   async function cargar() {
     const sb = supabase;
@@ -236,10 +253,17 @@ export default function PanelProductosVendedor({
     setAbierto(true);
   }
 
+  function pedirBorrar(p: ProductoRow) {
+    setError(null);
+    setABorrar(p);
+  }
+
   async function eliminar(p: ProductoRow) {
-    if (!confirm(`¿Eliminar "${p.nombre}"?`)) return;
+    if (borrandoRef.current) return;
     const sb = supabase;
     if (!sb) return;
+    borrandoRef.current = true;
+    setBorrando(true);
     try {
       if (!navigator.onLine) {
         await guardarPendiente(
@@ -258,17 +282,25 @@ export default function PanelProductosVendedor({
         );
         setPendientes((await listarPendientes()).length);
         setAviso("Borrado guardado sin conexión. Se aplicará al volver la señal.");
+        setABorrar(null);
         return;
       }
-      await sb.from("productos").delete().eq("id", p.id);
+      const { error } = await sb.from("productos").delete().eq("id", p.id);
+      if (error && !esDuplicado(error)) throw error;
+      setABorrar(null);
       await cargar();
       void sincronizarCatalogo(true);
     } catch {
-      setError("No se pudo eliminar el producto.");
+      setError("No se pudo eliminar el producto. Intenta de nuevo.");
+    } finally {
+      borrandoRef.current = false;
+      setBorrando(false);
     }
   }
 
   async function handleImagen(file: File) {
+    if (comprimiendoRef.current) return;
+    comprimiendoRef.current = true;
     setErrorImagen(null);
     setComprimiendo(true);
     try {
@@ -278,6 +310,7 @@ export default function PanelProductosVendedor({
         blob: res.blob,
         cardBlob: res.cardBlob,
         thumbBlob: res.thumbBlob,
+        fotoId: nuevoId(),
         miniatura: res.miniatura,
         pesoBytes: res.pesoBytes,
         pesoCard: res.pesoCard,
@@ -292,6 +325,7 @@ export default function PanelProductosVendedor({
         e instanceof Error ? e.message : "No se pudo procesar la imagen."
       );
     } finally {
+      comprimiendoRef.current = false;
       setComprimiendo(false);
     }
   }
@@ -302,6 +336,7 @@ export default function PanelProductosVendedor({
       blob: null,
       cardBlob: null,
       thumbBlob: null,
+      fotoId: null,
       miniatura: null,
       pesoBytes: 0,
       pesoCard: 0,
@@ -315,6 +350,7 @@ export default function PanelProductosVendedor({
   }
 
   async function guardarProducto() {
+    if (guardandoRef.current || comprimiendoRef.current) return;
     if (!form.nombre.trim()) {
       setError("El nombre es obligatorio.");
       return;
@@ -328,77 +364,91 @@ export default function PanelProductosVendedor({
       setError("Backend no disponible.");
       return;
     }
-    const {
-      data: { user },
-    } = await sb.auth.getUser();
-    if (!user) {
-      setError("No hay sesión de usuario activa.");
-      return;
-    }
-    let vendedorId: string;
-    try {
-      vendedorId = await asegurarPerfilVendedor(user, null);
-    } catch {
-      setError("No se pudo preparar tu perfil de vendedor.");
-      return;
-    }
 
+    guardandoRef.current = true;
     setSubiendo(true);
     setError(null);
     setAviso(null);
 
-    const datos = {
-      nombre: form.nombre.trim(),
-      descripcion: form.descripcion.trim(),
-      precio_cup: form.precio_cup,
-      sector: form.sector,
-      destacado: form.destacado,
-      vendedor_id: vendedorId,
-      slug: editandoId ? undefined : slugProducto(form.nombre),
-    };
-    const fotoPendiente =
-      form.blob && form.cardBlob && form.thumbBlob
-        ? {
-            full: form.blob,
-            card: form.cardBlob,
-            thumb: form.thumbBlob,
-            ancho: form.ancho,
-            alto: form.alto,
-            peso: form.pesoBytes,
-            preview: form.miniatura ?? "",
-          }
-        : undefined;
-
-    if (!navigator.onLine) {
-      await guardarPendiente(
-        nuevoPendiente(
-          editandoId ? "producto-editar" : "producto-crear",
-          datos,
-          {
-            productoId: editandoId ?? undefined,
-            foto: fotoPendiente,
-            quitarFoto: form.quitarFoto,
-          }
-        )
-      );
-      setPendientes((await listarPendientes()).length);
-      resetForm();
-      setAbierto(false);
-      setSubiendo(false);
-      setAviso(
-        "Guardado sin conexión. Se publicará solo cuando vuelva la señal."
-      );
-      return;
-    }
-
     try {
-      const urls = form.blob && form.cardBlob && form.thumbBlob
-        ? await subirFoto(sb, user.id, {
-            full: form.blob,
-            card: form.cardBlob,
-            thumb: form.thumbBlob,
-          })
-        : null;
+      const {
+        data: { user },
+      } = await sb.auth.getUser();
+      if (!user) {
+        setError("No hay sesión de usuario activa.");
+        return;
+      }
+      let vendedorId: string;
+      try {
+        vendedorId = await asegurarPerfilVendedor(user, null);
+      } catch {
+        setError("No se pudo preparar tu perfil de vendedor.");
+        return;
+      }
+
+      const productoId = editandoId ?? nuevoId();
+      const fotoId = form.fotoId ?? (form.blob ? nuevoId() : null);
+      const datos = {
+        nombre: form.nombre.trim(),
+        descripcion: form.descripcion.trim(),
+        precio_cup: form.precio_cup,
+        sector: form.sector,
+        destacado: form.destacado,
+        vendedor_id: vendedorId,
+        slug: editandoId ? undefined : slugProducto(form.nombre),
+      };
+      const fotoPendiente =
+        form.blob && form.cardBlob && form.thumbBlob
+          ? {
+              full: form.blob,
+              card: form.cardBlob,
+              thumb: form.thumbBlob,
+              ancho: form.ancho,
+              alto: form.alto,
+              peso: form.pesoBytes,
+              preview: form.miniatura ?? "",
+            }
+          : undefined;
+
+      if (!navigator.onLine) {
+        await guardarPendiente(
+          nuevoPendiente(
+            editandoId ? "producto-editar" : "producto-crear",
+            datos,
+            {
+              productoId,
+              fotoId: fotoId ?? undefined,
+              foto: fotoPendiente,
+              quitarFoto: form.quitarFoto,
+            }
+          )
+        );
+        setPendientes((await listarPendientes()).length);
+        resetForm();
+        setAbierto(false);
+        setAviso(
+          "Guardado sin conexión. Se publicará solo cuando vuelva la señal."
+        );
+        return;
+      }
+
+      const urls =
+        form.blob && form.cardBlob && form.thumbBlob && fotoId
+          ? await conTiempo(
+              subirFoto(
+                sb,
+                user.id,
+                {
+                  full: form.blob,
+                  card: form.cardBlob,
+                  thumb: form.thumbBlob,
+                },
+                `${user.id}/${productoId}-${fotoId}`
+              ),
+              90000,
+              "La subida de la foto tardó demasiado. Revisa la señal e intenta de nuevo."
+            )
+          : null;
       let errorFoto: string | null = null;
 
       const productoData = {
@@ -416,45 +466,34 @@ export default function PanelProductosVendedor({
           .update(productoData)
           .eq("id", editandoId);
         if (errUpdate) throw errUpdate;
-
-        if (form.quitarFoto) {
-          await sb.from("fotos").delete().eq("producto_id", editandoId);
-        }
-        if (urls) {
-          const { error: errFoto } = await sb.from("fotos").insert({
-            producto_id: editandoId,
-            nombre_producto: datos.nombre,
-            url: urls.url,
-            card_url: urls.cardUrl,
-            thumb_url: urls.thumbUrl,
-            peso_bytes: form.pesoBytes,
-            ancho: form.ancho,
-            alto: form.alto,
-            estado: "sincronizada",
-          });
-          if (errFoto) errorFoto = errFoto.message;
-        }
       } else {
-        const { data: nuevo, error: err } = await sb
-          .from("productos")
-          .insert({ ...productoData, slug: datos.slug! })
-          .select("id")
-          .single();
-        if (err) throw err;
-        if (urls && nuevo) {
-          const { error: errFoto } = await sb.from("fotos").insert({
-            producto_id: nuevo.id,
-            nombre_producto: datos.nombre,
-            url: urls.url,
-            card_url: urls.cardUrl,
-            thumb_url: urls.thumbUrl,
-            peso_bytes: form.pesoBytes,
-            ancho: form.ancho,
-            alto: form.alto,
-            estado: "sincronizada",
-          });
-          if (errFoto) errorFoto = errFoto.message;
+        const { error: err } = await sb.from("productos").insert({
+          id: productoId,
+          ...productoData,
+          slug: datos.slug!,
+        });
+        if (err && !esDuplicado(err)) throw err;
+      }
+
+      if (urls && fotoId) {
+        if (editandoId) {
+          await sb.from("fotos").delete().eq("producto_id", productoId);
         }
+        const { error: errFoto } = await sb.from("fotos").insert({
+          id: fotoId,
+          producto_id: productoId,
+          nombre_producto: datos.nombre,
+          url: urls.url,
+          card_url: urls.cardUrl,
+          thumb_url: urls.thumbUrl,
+          peso_bytes: form.pesoBytes,
+          ancho: form.ancho,
+          alto: form.alto,
+          estado: "sincronizada",
+        });
+        if (errFoto && !esDuplicado(errFoto)) errorFoto = errFoto.message;
+      } else if (form.quitarFoto && editandoId) {
+        await sb.from("fotos").delete().eq("producto_id", productoId);
       }
 
       resetForm();
@@ -472,6 +511,7 @@ export default function PanelProductosVendedor({
         e instanceof Error ? e.message : "No se pudo guardar el producto."
       );
     } finally {
+      guardandoRef.current = false;
       setSubiendo(false);
     }
   }
@@ -582,12 +622,14 @@ export default function PanelProductosVendedor({
                     Editar
                   </Button>
                   <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => eliminar(p)}
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => pedirBorrar(p)}
+                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    aria-label={`Eliminar ${p.nombre}`}
+                    title="Eliminar"
                   >
-                    <Trash2 className="size-4 mr-1" aria-hidden="true" />
-                    Borrar
+                    <Trash2 className="size-4" aria-hidden="true" />
                   </Button>
                 </div>
               </div>
@@ -595,6 +637,72 @@ export default function PanelProductosVendedor({
           ))
         )}
       </div>
+
+      {/* Confirmar borrado */}
+      {aBorrar && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => !borrando && setABorrar(null)}
+            aria-hidden="true"
+          />
+          <div
+            className="relative z-10 w-full max-w-sm rounded-2xl border bg-card p-5 shadow-premium animate-fade-in"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="titulo-borrar"
+            aria-describedby="texto-borrar"
+          >
+            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+              <Trash2 className="size-6" aria-hidden="true" />
+            </div>
+            <h2
+              id="titulo-borrar"
+              className="mt-4 text-center text-lg font-bold"
+            >
+              ¿Eliminar este producto?
+            </h2>
+            <p
+              id="texto-borrar"
+              className="mt-2 text-center text-sm text-muted-foreground"
+            >
+              Se borrará «{aBorrar.nombre}» y su foto. Esta acción no se puede
+              deshacer.
+            </p>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setABorrar(null)}
+                disabled={borrando}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => eliminar(aBorrar)}
+                disabled={borrando}
+              >
+                {borrando ? (
+                  <>
+                    <Loader2
+                      className="size-4 mr-2 animate-spin"
+                      aria-hidden="true"
+                    />
+                    Borrando…
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="size-4 mr-2" aria-hidden="true" />
+                    Eliminar
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal crear/editar */}
       {abierto && (

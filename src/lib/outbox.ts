@@ -8,6 +8,7 @@ import {
   type Pendiente,
 } from "@/lib/db-local";
 import { subirFoto } from "@/lib/subida";
+import { esDuplicado, nuevoId } from "@/lib/ids";
 
 export type DatosProducto = {
   nombre: string;
@@ -24,6 +25,7 @@ export function nuevoPendiente(
   datos: DatosProducto,
   opciones: {
     productoId?: string;
+    fotoId?: string;
     foto?: Pendiente["foto"];
     quitarFoto?: boolean;
   } = {}
@@ -32,7 +34,8 @@ export function nuevoPendiente(
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     tipo,
     datos,
-    productoId: opciones.productoId,
+    productoId: opciones.productoId ?? (tipo === "producto-crear" ? nuevoId() : undefined),
+    fotoId: opciones.fotoId ?? (opciones.foto ? nuevoId() : undefined),
     foto: opciones.foto,
     quitarFoto: opciones.quitarFoto,
     intentos: 0,
@@ -40,8 +43,21 @@ export function nuevoPendiente(
   };
 }
 
-/** Reintenta la cola offline. Devuelve cuántos elementos se completaron. */
-export async function procesarPendientes(): Promise<number> {
+let enCurso: Promise<number> | null = null;
+
+/**
+ * Reintenta la cola offline. Devuelve cuántos elementos se completaron.
+ * Una sola ejecución a la vez: dos vaciados simultáneos duplicaban productos.
+ */
+export function procesarPendientes(): Promise<number> {
+  if (enCurso) return enCurso;
+  enCurso = ejecutarPendientes().finally(() => {
+    enCurso = null;
+  });
+  return enCurso;
+}
+
+async function ejecutarPendientes(): Promise<number> {
   if (!supabase || typeof navigator === "undefined" || !navigator.onLine) {
     return 0;
   }
@@ -56,35 +72,38 @@ export async function procesarPendientes(): Promise<number> {
           .from("productos")
           .delete()
           .eq("id", p.productoId);
-        if (error) throw error;
+        if (error && !esDuplicado(error)) throw error;
       } else {
         const datos = p.datos as unknown as DatosProducto;
+        const productoId =
+          p.productoId ?? (p.tipo === "producto-crear" ? nuevoId() : undefined);
+        const fotoId = p.fotoId ?? (p.foto ? nuevoId() : undefined);
         let urls: Awaited<ReturnType<typeof subirFoto>> | null = null;
         if (p.foto) {
-          urls = await subirFoto(sb, datos.vendedor_id, {
-            full: p.foto.full,
-            card: p.foto.card,
-            thumb: p.foto.thumb,
-          });
+          urls = await subirFoto(
+            sb,
+            datos.vendedor_id,
+            {
+              full: p.foto.full,
+              card: p.foto.card,
+              thumb: p.foto.thumb,
+            },
+            `${datos.vendedor_id}/${productoId}-${fotoId}`
+          );
         }
 
-        let productoId = p.productoId;
         if (p.tipo === "producto-crear") {
-          const { data, error } = await sb
-            .from("productos")
-            .insert({
-              nombre: datos.nombre,
-              descripcion: datos.descripcion,
-              precio_cup: datos.precio_cup,
-              sector: datos.sector,
-              destacado: datos.destacado,
-              vendedor_id: datos.vendedor_id,
-              slug: datos.slug ?? `producto-${Date.now().toString(36)}`,
-            })
-            .select("id")
-            .single();
-          if (error) throw error;
-          productoId = data.id;
+          const { error } = await sb.from("productos").insert({
+            id: productoId,
+            nombre: datos.nombre,
+            descripcion: datos.descripcion,
+            precio_cup: datos.precio_cup,
+            sector: datos.sector,
+            destacado: datos.destacado,
+            vendedor_id: datos.vendedor_id,
+            slug: datos.slug ?? `producto-${Date.now().toString(36)}`,
+          });
+          if (error && !esDuplicado(error)) throw error;
         } else if (p.tipo === "producto-editar" && productoId) {
           const { error } = await sb
             .from("productos")
@@ -104,6 +123,7 @@ export async function procesarPendientes(): Promise<number> {
 
         if (urls && productoId) {
           const { error } = await sb.from("fotos").insert({
+            id: fotoId,
             producto_id: productoId,
             nombre_producto: datos.nombre,
             url: urls.url,
@@ -114,7 +134,7 @@ export async function procesarPendientes(): Promise<number> {
             alto: p.foto?.alto ?? 0,
             estado: "sincronizada",
           });
-          if (error) throw error;
+          if (error && !esDuplicado(error)) throw error;
         }
       }
 
