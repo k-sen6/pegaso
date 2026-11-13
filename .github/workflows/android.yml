@@ -52,4 +52,4 @@ jobs:
       - name: Probar secreto
         run: echo "ok"
         env:
-          PEGA_RELEASE_KEY_BASE64: ${{ secrets.PEGA_RELEASE_KEY_BASE64 }}
+          PEGA_RELEASE_KEY_BASE64: ${{ secrets.PEGA_RELEASE_KEY_ALIAS }}
