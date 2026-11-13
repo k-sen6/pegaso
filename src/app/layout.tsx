@@ -6,6 +6,9 @@ import { Providers } from "@/components/providers";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { BottomNav } from "@/components/layout/bottom-nav";
+import { Nativo } from "@/components/nativo";
+import { OfflineBanner } from "@/components/offline-banner";
+import { BASE, ES_APK } from "@/lib/base";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,10 +30,10 @@ export const metadata: Metadata = {
   },
   description:
     "Conectamos vendedores cubanos verificados con compradores nacionales y financiamiento internacional.",
-  manifest: "/pegaso/manifest.json",
+  manifest: `${BASE}/manifest.json`,
   icons: {
-    icon: "/pegaso/icons/icon-192.png",
-    apple: "/pegaso/icons/icon-192.png",
+    icon: `${BASE}/icons/icon-192.png`,
+    apple: `${BASE}/icons/icon-192.png`,
   },
   applicationName: "Pegaso",
 };
@@ -39,6 +42,7 @@ export const viewport: Viewport = {
   themeColor: "#070d14",
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -47,24 +51,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning className={ES_APK ? "es-apk" : undefined}>
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}>
         <Providers>
+          <Nativo />
+          <OfflineBanner />
           <div className="flex min-h-dvh flex-col">
             <Header />
-            <main className="flex-1 pb-20 md:pb-0">{children}</main>
+            <main className="page-enter flex-1 pb-[calc(76px+env(safe-area-inset-bottom))] md:pb-0">{children}</main>
             <Footer />
             <BottomNav />
           </div>
         </Providers>
-        <Script
-          id="sw-registro"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html:
-              'if("serviceWorker" in navigator && location.protocol==="https:"||location.hostname==="localhost"){navigator.serviceWorker.register("/pegaso/sw.js").catch(function(){})}',
-          }}
-        />
+        {!ES_APK && (
+          <Script
+            id="sw-registro"
+            strategy="afterInteractive"
+            dangerouslySetInnerHTML={{
+              __html: `if("serviceWorker" in navigator){navigator.serviceWorker.register("${BASE}/sw.js").catch(function(){})}`,
+            }}
+          />
+        )}
       </body>
     </html>
   );

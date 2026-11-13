@@ -1,13 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import type {
-  Producto,
-  Cooperativa,
-  Sector,
-  EstadoVerificacion,
-} from "@/lib/catalogo";
+import { useEffect, useMemo, useState } from "react";
+import type { Producto } from "@/lib/catalogo";
+import { useCatalogoVivo } from "@/lib/catalogo";
 import {
   BadgeCheck,
   ChevronLeft,
@@ -25,132 +21,33 @@ import { VerificacionBadge } from "@/components/coop-card";
 import { formatoPrecioCup } from "@/lib/precio";
 import { enlaceMapa, mensajeProducto, formatearTelefono } from "@/lib/whatsapp";
 
-interface FichaEstado {
-  producto: Producto | null;
-  cooperativa: Cooperativa | null;
-  relacionados: Producto[];
-  fotos: Map<string, string>;
-  vivo: boolean;
-}
-
 export default function FichaProducto() {
   const [slug, setSlug] = useState("");
   const [urlProducto, setUrlProducto] = useState("");
-  const [estado, setEstado] = useState<FichaEstado>({
-    producto: null,
-    cooperativa: null,
-    relacionados: [],
-    fotos: new Map(),
-    vivo: false,
-  });
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const s = params.get("slug") ?? "";
-    setSlug(s);
+    setSlug(params.get("slug") ?? "");
     setUrlProducto(window.location.href);
-    if (!s) return;
-    let vivo = true;
-    (async () => {
-      try {
-        const { supabase } = await import("@/lib/supabase");
-        if (!supabase || !vivo) return;
-        const { data: prod, error: errP } = await supabase
-          .from("productos")
-          .select("*")
-          .eq("slug", s)
-          .maybeSingle();
-        if (errP || !prod || !vivo) return;
-        const { data: ven } = await supabase
-          .from("vendedores")
-          .select("*")
-          .eq("id", prod.vendedor_id)
-          .maybeSingle();
-        if (!vivo) return;
-
-        let relacionados: Producto[] = [];
-        if (prod.vendedor_id) {
-          const { data: rel } = await supabase
-            .from("productos")
-            .select("*")
-            .eq("vendedor_id", prod.vendedor_id)
-            .neq("id", prod.id)
-            .order("destacado", { ascending: false })
-            .limit(4);
-          relacionados = (rel ?? []).map((r) => ({
-            id: r.id,
-            slug: r.slug,
-            nombre: r.nombre,
-            descripcion: r.descripcion,
-            precio_cup: r.precio_cup,
-            sector: r.sector as Sector,
-            destacado: r.destacado,
-            hue: r.hue ?? 225,
-            vendedor_id: r.vendedor_id,
-            created_at: r.created_at,
-          }));
-        }
-
-        const mapaFotos = new Map<string, string>();
-        const ids = relacionados.map((r) => r.id);
-        if (ids.length > 0) {
-          const { data: fotosData } = await supabase
-            .from("fotos")
-            .select("producto_id, url, created_at")
-            .eq("estado", "sincronizada")
-            .in("producto_id", ids)
-            .order("created_at", { ascending: false });
-          for (const f of fotosData ?? []) {
-            if (f.producto_id && f.url && !mapaFotos.has(f.producto_id)) {
-              mapaFotos.set(f.producto_id, f.url);
-            }
-          }
-        }
-
-        if (!vivo) return;
-        setEstado({
-          vivo: true,
-          producto: {
-            id: prod.id,
-            slug: prod.slug,
-            nombre: prod.nombre,
-            descripcion: prod.descripcion,
-            precio_cup: prod.precio_cup,
-            sector: prod.sector as Sector,
-            destacado: prod.destacado,
-            hue: prod.hue ?? 225,
-            vendedor_id: prod.vendedor_id,
-            created_at: prod.created_at,
-          },
-          cooperativa: ven
-            ? {
-                id: ven.id,
-                slug: ven.slug,
-                nombre: ven.nombre,
-                sector: ven.sector as Sector,
-                provincia: ven.provincia,
-                municipio: ven.municipio,
-                descripcion: ven.descripcion,
-                verificacion: ven.verificacion as EstadoVerificacion,
-                foto_url: ven.foto_url,
-                telefono: ven.telefono ?? null,
-                direccion: ven.direccion ?? null,
-                lat: ven.lat ?? null,
-                lng: ven.lng ?? null,
-                created_at: ven.created_at,
-              }
-            : null,
-          relacionados,
-          fotos: mapaFotos,
-        });
-      } catch {
-        // sin red: queda vacío (offline-first)
-      }
-    })();
-    return () => {
-      vivo = false;
-    };
   }, []);
+
+  const { productos, cooperativas, fotosPorProducto, vivo } = useCatalogoVivo();
+  const producto = useMemo(
+    () => productos.find((p) => p.slug === slug) ?? null,
+    [productos, slug]
+  );
+  const v = producto ? cooperativas.get(producto.vendedor_id) ?? null : null;
+  const foto = producto ? fotosPorProducto.get(producto.id) : undefined;
+  const relacionados = useMemo(() => {
+    if (!producto) return [] as Producto[];
+    return productos
+      .filter(
+        (r) =>
+          r.vendedor_id === producto.vendedor_id && r.id !== producto.id
+      )
+      .sort((a, b) => Number(b.destacado) - Number(a.destacado))
+      .slice(0, 4);
+  }, [productos, producto]);
 
   if (!slug) {
     return (
@@ -160,16 +57,17 @@ export default function FichaProducto() {
     );
   }
 
-  if (!estado.producto) {
+  if (!producto) {
     return (
       <article className="mx-auto max-w-3xl px-4 py-12 text-center">
-        <p className="text-muted-foreground">Cargando producto…</p>
+        <p className="text-muted-foreground">
+          {vivo ? "Este producto ya no está disponible." : "Cargando producto…"}
+        </p>
       </article>
     );
   }
 
-  const p = estado.producto;
-  const v = estado.cooperativa;
+  const p = producto;
   const mapa = v
     ? enlaceMapa({
         direccion: v.direccion,
@@ -199,7 +97,7 @@ export default function FichaProducto() {
       </Link>
 
       <div className="mt-4 grid gap-6 sm:grid-cols-2">
-        <FotoFicha producto={p} />
+        <FotoFicha producto={p} foto={foto} />
 
         <div>
           <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -300,7 +198,7 @@ export default function FichaProducto() {
         </div>
       </div>
 
-      {estado.relacionados.length > 0 && (
+      {relacionados.length > 0 && (
         <section className="mt-10" aria-labelledby="relacionados">
           <h2
             id="relacionados"
@@ -309,12 +207,12 @@ export default function FichaProducto() {
             Más de {v?.nombre ?? "este vendedor"}
           </h2>
           <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {estado.relacionados.map((r) => (
+            {relacionados.map((r) => (
               <ProductCard
                 key={r.id}
                 producto={r}
                 cooperativa={v}
-                fotoUrl={estado.fotos.get(r.id) ?? null}
+                fotoUrl={fotosPorProducto.get(r.id)?.thumb ?? null}
               />
             ))}
           </div>

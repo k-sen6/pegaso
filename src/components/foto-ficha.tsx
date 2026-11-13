@@ -1,54 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { PortadaOptin } from "@/components/portada-optin";
+import type { Producto, FotoProducto } from "@/lib/catalogo";
 
 /**
- * Portada de la ficha: foto subida por el vendedor (Supabase) si existe;
- * si no, la AVIF temática local. Offline: siempre la local.
+ * Portada de la ficha: usa la foto ya cargada por la página (sin consultas
+ * extra) o cae al arte local. Offline siempre tiene algo que mostrar.
  */
-import type { Producto } from "@/lib/catalogo";
-
-export function FotoFicha({ producto }: { producto: Producto }) {
-  const [fotoUrl, setFotoUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!supabase) return;
-    let vivo = true;
-    (async () => {
-      try {
-        const { data: prod } = await supabase
-          .from("productos")
-          .select("id")
-          .eq("slug", producto.slug)
-          .maybeSingle();
-        if (!prod || !vivo) return;
-        const { data: foto } = await supabase
-          .from("fotos")
-          .select("url")
-          .eq("producto_id", prod.id)
-          .eq("estado", "sincronizada")
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (vivo && foto?.url) setFotoUrl(foto.url);
-      } catch {
-        // sin red: portada local
-      }
-    })();
-    return () => {
-      vivo = false;
-    };
-  }, [producto.slug]);
-
+export function FotoFicha({
+  producto,
+  foto,
+}: {
+  producto: Producto;
+  foto?: FotoProducto | null;
+}) {
   return (
     <PortadaOptin
       temaId="generica"
       hue={producto.hue ?? 225}
       nombre={producto.nombre}
       priorizar
-      fotoUrl={fotoUrl}
+      fotoUrl={foto?.card ?? foto?.thumb ?? null}
       className="aspect-[4/3] rounded-xl"
     />
   );

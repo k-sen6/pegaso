@@ -1,136 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MapPin, ArrowRight, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
 import { VerificacionBadge } from "@/components/coop-card";
 import { BotonWhatsApp } from "@/components/boton-whatsapp";
+import { useCatalogoVivo } from "@/lib/catalogo";
 import { enlaceMapa, formatearTelefono, mensajeTienda } from "@/lib/whatsapp";
-
-interface VendedorEstado {
-  cooperativa: {
-    id: string;
-    slug: string;
-    nombre: string;
-    sector: string;
-    provincia: string;
-    municipio: string;
-    descripcion: string;
-    verificacion: string;
-    foto_url: string | null;
-    telefono: string | null;
-    direccion: string | null;
-    lat: number | null;
-    lng: number | null;
-    created_at: string;
-  } | null;
-  productos: {
-    id: string;
-    slug: string;
-    nombre: string;
-    descripcion: string;
-    precio_cup: number;
-    sector: string;
-    destacado: boolean;
-    hue: number;
-    vendedor_id: string;
-    created_at: string;
-  }[];
-  vivo: boolean;
-}
 
 export default function VendedorClient() {
   const [slug, setSlug] = useState("");
-  const [fotos, setFotos] = useState<Map<string, string>>(new Map());
-  const [estado, setEstado] = useState<VendedorEstado>({
-    cooperativa: null,
-    productos: [],
-    vivo: false,
-  });
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const s = params.get("slug") ?? "";
-    setSlug(s);
-    if (!s) return;
-    let vivo = true;
-    (async () => {
-      try {
-        const { supabase } = await import("@/lib/supabase");
-        if (!supabase || !vivo) return;
-        const { data: ven, error: errV } = await supabase
-          .from("vendedores")
-          .select("*")
-          .eq("slug", s)
-          .maybeSingle();
-        if (errV || !ven || !vivo) return;
-        const { data: prods } = await supabase
-          .from("productos")
-          .select("*")
-          .eq("vendedor_id", ven.id)
-          .order("destacado", { ascending: false });
-        if (!vivo) return;
-
-        const mapaFotos = new Map<string, string>();
-        if (prods && prods.length > 0) {
-          const { data: fotosData } = await supabase
-            .from("fotos")
-            .select("producto_id, url, created_at")
-            .eq("estado", "sincronizada")
-            .in(
-              "producto_id",
-              prods.map((p) => p.id)
-            )
-            .order("created_at", { ascending: false });
-          for (const f of fotosData ?? []) {
-            if (f.producto_id && f.url && !mapaFotos.has(f.producto_id)) {
-              mapaFotos.set(f.producto_id, f.url);
-            }
-          }
-        }
-        setFotos(mapaFotos);
-
-        setEstado({
-          cooperativa: {
-            id: ven.id,
-            slug: ven.slug,
-            nombre: ven.nombre,
-            sector: ven.sector,
-            provincia: ven.provincia,
-            municipio: ven.municipio,
-            descripcion: ven.descripcion,
-            verificacion: ven.verificacion,
-            foto_url: ven.foto_url,
-            telefono: ven.telefono ?? null,
-            direccion: ven.direccion ?? null,
-            lat: ven.lat ?? null,
-            lng: ven.lng ?? null,
-            created_at: ven.created_at,
-          },
-          productos: (prods ?? []).map((p) => ({
-            id: p.id,
-            slug: p.slug,
-            nombre: p.nombre,
-            descripcion: p.descripcion,
-            precio_cup: p.precio_cup,
-            sector: p.sector,
-            destacado: p.destacado,
-            hue: p.hue ?? 225,
-            vendedor_id: p.vendedor_id,
-            created_at: p.created_at,
-          })),
-          vivo: true,
-        });
-      } catch {
-        // sin red: queda vacío
-      }
-    })();
-    return () => {
-      vivo = false;
-    };
+    setSlug(params.get("slug") ?? "");
   }, []);
+
+  const { productos, cooperativas, fotosPorProducto, vivo } = useCatalogoVivo();
+  const cooperativa = useMemo(
+    () => Array.from(cooperativas.values()).find((v) => v.slug === slug) ?? null,
+    [cooperativas, slug]
+  );
+  const productosVendedor = useMemo(
+    () =>
+      cooperativa
+        ? productos
+            .filter((p) => p.vendedor_id === cooperativa.id)
+            .sort((a, b) => Number(b.destacado) - Number(a.destacado))
+        : [],
+    [productos, cooperativa]
+  );
 
   if (!slug) {
     return (
@@ -140,15 +41,17 @@ export default function VendedorClient() {
     );
   }
 
-  if (!estado.cooperativa) {
+  if (!cooperativa) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-12 text-center">
-        <p className="text-muted-foreground">Cargando vendedor…</p>
+        <p className="text-muted-foreground">
+          {vivo ? "Este vendedor no está disponible." : "Cargando vendedor…"}
+        </p>
       </div>
     );
   }
 
-  const c = estado.cooperativa;
+  const c = cooperativa;
   const mapa = enlaceMapa({
     direccion: c.direccion,
     municipio: c.municipio,
@@ -156,7 +59,7 @@ export default function VendedorClient() {
     lat: c.lat,
     lng: c.lng,
   });
-  const tieneProductos = estado.productos.length > 0;
+  const tieneProductos = productosVendedor.length > 0;
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-14">
@@ -215,7 +118,7 @@ export default function VendedorClient() {
         <section aria-labelledby="productos-vendedor" className="mt-10">
           <div className="flex items-baseline justify-between gap-2">
             <h2 id="productos-vendedor" className="text-xl font-semibold tracking-tight">
-              Productos de {c.nombre} ({estado.productos.length})
+              Productos de {c.nombre} ({productosVendedor.length})
             </h2>
             <Link
               href="/productos"
@@ -225,12 +128,12 @@ export default function VendedorClient() {
             </Link>
           </div>
           <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {estado.productos.map((p) => (
+            {productosVendedor.map((p) => (
               <ProductCard
                 key={p.id}
                 producto={p}
                 cooperativa={c}
-                fotoUrl={fotos.get(p.id) ?? null}
+                fotoUrl={fotosPorProducto.get(p.id)?.thumb ?? null}
               />
             ))}
           </div>

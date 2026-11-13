@@ -3,6 +3,7 @@
 import { useSyncExternalStore, type CSSProperties } from "react";
 import { ui, uiServidor } from "@/store/ui";
 import { cn } from "cn";
+import { rutaLocal } from "@/lib/base";
 
 /**
  * Portada única de productos.
@@ -44,7 +45,7 @@ export function PortadaOptin({
       {imagenes && (
         <>
           <img
-            src={fotoUrl ?? "/pegaso/img/generica.avif"}
+            src={fotoUrl ?? rutaLocal("/img/generica.avif")}
             alt={nombre}
             {...(priorizar ? { fetchPriority: "high" as const } : { loading: "lazy" as const })}
             decoding="async"

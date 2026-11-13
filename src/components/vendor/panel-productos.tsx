@@ -17,6 +17,11 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { comprimirFoto, formatoPeso } from "@/lib/compresor";
 import { asegurarPerfilVendedor } from "@/lib/auth";
+import { subirFoto } from "@/lib/subida";
+import { nuevoPendiente, procesarPendientes } from "@/lib/outbox";
+import { guardarPendiente, listarPendientes } from "@/lib/db-local";
+import { sincronizarCatalogo } from "@/lib/catalogo";
+import { rutaLocal } from "@/lib/base";
 import { formatoPrecioCup } from "@/lib/precio";
 import { cn } from "cn";
 import { SECTORES, SECTOR_LABELS } from "@/lib/perfil-opciones";
@@ -40,7 +45,11 @@ interface ProductoForm {
   miniatura: string | null;
   fotoActual: string | null;
   blob: Blob | null;
+  cardBlob: Blob | null;
+  thumbBlob: Blob | null;
   pesoBytes: number;
+  pesoCard: number;
+  pesoThumb: number;
   pesoOriginal: number;
   ancho: number;
   alto: number;
@@ -68,7 +77,11 @@ const FORM_VACIO: ProductoForm = {
   miniatura: null,
   fotoActual: null,
   blob: null,
+  cardBlob: null,
+  thumbBlob: null,
   pesoBytes: 0,
+  pesoCard: 0,
+  pesoThumb: 0,
   pesoOriginal: 0,
   ancho: 0,
   alto: 0,
@@ -89,7 +102,9 @@ export default function PanelProductosVendedor({
   const [subiendo, setSubiendo] = useState(false);
   const [comprimiendo, setComprimiendo] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
   const [errorImagen, setErrorImagen] = useState<string | null>(null);
+  const [pendientes, setPendientes] = useState(0);
   const [arrastrando, setArrastrando] = useState(false);
 
   const inputGaleria = useRef<HTMLInputElement>(null);
@@ -97,6 +112,32 @@ export default function PanelProductosVendedor({
 
   useEffect(() => {
     cargar();
+  }, []);
+
+  useEffect(() => {
+    let activo = true;
+
+    async function reintentar() {
+      if (!navigator.onLine) {
+        if (activo) setPendientes((await listarPendientes()).length);
+        return;
+      }
+      const hechos = await procesarPendientes();
+      const restantes = (await listarPendientes()).length;
+      if (activo) setPendientes(restantes);
+      if (hechos > 0) {
+        await cargar();
+        void sincronizarCatalogo(true);
+      }
+    }
+
+    void reintentar();
+    const alVolver = () => void reintentar();
+    window.addEventListener("online", alVolver);
+    return () => {
+      activo = false;
+      window.removeEventListener("online", alVolver);
+    };
   }, []);
 
   // Bloquea el scroll del fondo mientras el modal está abierto.
@@ -143,7 +184,7 @@ export default function PanelProductosVendedor({
       if (lista.length > 0) {
         const { data: fotosData } = await sb
           .from("fotos")
-          .select("producto_id, url, created_at")
+          .select("producto_id, url, thumb_url, created_at")
           .eq("estado", "sincronizada")
           .in(
             "producto_id",
@@ -153,7 +194,7 @@ export default function PanelProductosVendedor({
         const mapa = new Map<string, string>();
         for (const f of fotosData ?? []) {
           if (f.producto_id && f.url && !mapa.has(f.producto_id)) {
-            mapa.set(f.producto_id, f.url);
+            mapa.set(f.producto_id, f.thumb_url ?? f.url);
           }
         }
         setFotos(mapa);
@@ -200,8 +241,28 @@ export default function PanelProductosVendedor({
     const sb = supabase;
     if (!sb) return;
     try {
+      if (!navigator.onLine) {
+        await guardarPendiente(
+          nuevoPendiente(
+            "producto-borrar",
+            {
+              nombre: p.nombre,
+              descripcion: p.descripcion,
+              precio_cup: p.precio_cup,
+              sector: p.sector,
+              destacado: p.destacado,
+              vendedor_id: p.vendedor_id,
+            },
+            { productoId: p.id }
+          )
+        );
+        setPendientes((await listarPendientes()).length);
+        setAviso("Borrado guardado sin conexión. Se aplicará al volver la señal.");
+        return;
+      }
       await sb.from("productos").delete().eq("id", p.id);
       await cargar();
+      void sincronizarCatalogo(true);
     } catch {
       setError("No se pudo eliminar el producto.");
     }
@@ -215,8 +276,12 @@ export default function PanelProductosVendedor({
       setForm((prev) => ({
         ...prev,
         blob: res.blob,
+        cardBlob: res.cardBlob,
+        thumbBlob: res.thumbBlob,
         miniatura: res.miniatura,
         pesoBytes: res.pesoBytes,
+        pesoCard: res.pesoCard,
+        pesoThumb: res.pesoThumb,
         pesoOriginal: res.pesoOriginal,
         ancho: res.ancho,
         alto: res.alto,
@@ -235,8 +300,12 @@ export default function PanelProductosVendedor({
     setForm((prev) => ({
       ...prev,
       blob: null,
+      cardBlob: null,
+      thumbBlob: null,
       miniatura: null,
       pesoBytes: 0,
+      pesoCard: 0,
+      pesoThumb: 0,
       pesoOriginal: 0,
       ancho: 0,
       alto: 0,
@@ -276,36 +345,68 @@ export default function PanelProductosVendedor({
 
     setSubiendo(true);
     setError(null);
+    setAviso(null);
+
+    const datos = {
+      nombre: form.nombre.trim(),
+      descripcion: form.descripcion.trim(),
+      precio_cup: form.precio_cup,
+      sector: form.sector,
+      destacado: form.destacado,
+      vendedor_id: vendedorId,
+      slug: editandoId ? undefined : slugProducto(form.nombre),
+    };
+    const fotoPendiente =
+      form.blob && form.cardBlob && form.thumbBlob
+        ? {
+            full: form.blob,
+            card: form.cardBlob,
+            thumb: form.thumbBlob,
+            ancho: form.ancho,
+            alto: form.alto,
+            peso: form.pesoBytes,
+            preview: form.miniatura ?? "",
+          }
+        : undefined;
+
+    if (!navigator.onLine) {
+      await guardarPendiente(
+        nuevoPendiente(
+          editandoId ? "producto-editar" : "producto-crear",
+          datos,
+          {
+            productoId: editandoId ?? undefined,
+            foto: fotoPendiente,
+            quitarFoto: form.quitarFoto,
+          }
+        )
+      );
+      setPendientes((await listarPendientes()).length);
+      resetForm();
+      setAbierto(false);
+      setSubiendo(false);
+      setAviso(
+        "Guardado sin conexión. Se publicará solo cuando vuelva la señal."
+      );
+      return;
+    }
 
     try {
-      let fotoUrl: string | null = null;
+      const urls = form.blob && form.cardBlob && form.thumbBlob
+        ? await subirFoto(sb, user.id, {
+            full: form.blob,
+            card: form.cardBlob,
+            thumb: form.thumbBlob,
+          })
+        : null;
       let errorFoto: string | null = null;
 
-      if (form.blob) {
-        const tipo = form.blob.type || "image/webp";
-        const ext = tipo.includes("jpeg")
-          ? "jpg"
-          : tipo.includes("png")
-            ? "png"
-            : "webp";
-        const ruta = `${user.id}/prod-${Date.now()}.${ext}`;
-        const { error: uploadError } = await sb.storage
-          .from("fotos")
-          .upload(ruta, form.blob, {
-            contentType: tipo,
-            upsert: true,
-          });
-        if (uploadError) throw uploadError;
-        const { data: urlData } = sb.storage.from("fotos").getPublicUrl(ruta);
-        fotoUrl = urlData.publicUrl;
-      }
-
       const productoData = {
-        nombre: form.nombre.trim(),
-        descripcion: form.descripcion.trim(),
-        precio_cup: form.precio_cup,
-        sector: form.sector,
-        destacado: form.destacado,
+        nombre: datos.nombre,
+        descripcion: datos.descripcion,
+        precio_cup: datos.precio_cup,
+        sector: datos.sector,
+        destacado: datos.destacado,
         vendedor_id: vendedorId,
       };
 
@@ -319,11 +420,13 @@ export default function PanelProductosVendedor({
         if (form.quitarFoto) {
           await sb.from("fotos").delete().eq("producto_id", editandoId);
         }
-        if (fotoUrl) {
+        if (urls) {
           const { error: errFoto } = await sb.from("fotos").insert({
             producto_id: editandoId,
-            nombre_producto: form.nombre.trim(),
-            url: fotoUrl,
+            nombre_producto: datos.nombre,
+            url: urls.url,
+            card_url: urls.cardUrl,
+            thumb_url: urls.thumbUrl,
             peso_bytes: form.pesoBytes,
             ancho: form.ancho,
             alto: form.alto,
@@ -334,15 +437,17 @@ export default function PanelProductosVendedor({
       } else {
         const { data: nuevo, error: err } = await sb
           .from("productos")
-          .insert({ ...productoData, slug: slugProducto(form.nombre) })
-          .select()
+          .insert({ ...productoData, slug: datos.slug! })
+          .select("id")
           .single();
         if (err) throw err;
-        if (fotoUrl && nuevo) {
+        if (urls && nuevo) {
           const { error: errFoto } = await sb.from("fotos").insert({
             producto_id: nuevo.id,
-            nombre_producto: form.nombre.trim(),
-            url: fotoUrl,
+            nombre_producto: datos.nombre,
+            url: urls.url,
+            card_url: urls.cardUrl,
+            thumb_url: urls.thumbUrl,
             peso_bytes: form.pesoBytes,
             ancho: form.ancho,
             alto: form.alto,
@@ -355,6 +460,7 @@ export default function PanelProductosVendedor({
       resetForm();
       setAbierto(false);
       await cargar();
+      void sincronizarCatalogo(true);
 
       if (errorFoto) {
         setError(
@@ -395,6 +501,19 @@ export default function PanelProductosVendedor({
         </Button>
       </div>
 
+      {pendientes > 0 && (
+        <div className="rounded-lg border border-warning/50 bg-warning/10 p-4 text-sm">
+          {pendientes} producto{pendientes === 1 ? "" : "s"} esperando señal.
+          Se publicará{pendientes === 1 ? "" : "n"} automáticamente.
+        </div>
+      )}
+
+      {aviso && !abierto && (
+        <div className="rounded-lg border border-success/50 bg-success/10 p-4 text-sm text-success">
+          {aviso}
+        </div>
+      )}
+
       {error && !abierto && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive text-sm">
           {error}
@@ -423,7 +542,7 @@ export default function PanelProductosVendedor({
             >
               <div className="relative aspect-[4/3] w-full bg-muted">
                 <img
-                  src={fotos.get(p.id) ?? "/pegaso/img/generica.avif"}
+                  src={fotos.get(p.id) ?? rutaLocal("/img/generica.avif")}
                   alt={p.nombre}
                   className="size-full object-cover"
                   loading="lazy"

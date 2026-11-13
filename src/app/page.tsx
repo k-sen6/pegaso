@@ -171,7 +171,7 @@ export default function Home() {
                 key={producto.id}
                 producto={producto}
                 cooperativa={coop ?? null}
-                fotoUrl={fotosPorProducto.get(producto.id) ?? null}
+                fotoUrl={fotosPorProducto.get(producto.id)?.thumb ?? null}
               />
             );
           })}

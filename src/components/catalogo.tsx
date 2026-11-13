@@ -228,7 +228,7 @@ export function Catalogo() {
                 key={producto.id}
                 producto={producto}
                 cooperativa={coop}
-                fotoUrl={fotosPorProducto.get(producto.id) ?? null}
+                fotoUrl={fotosPorProducto.get(producto.id)?.thumb ?? null}
               />
             );
           })}

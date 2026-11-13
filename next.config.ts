@@ -14,6 +14,8 @@ const nextConfig: NextConfig = {
   trailingSlash: true,
   env: {
     NEXT_PUBLIC_BUILD: process.env.NEXT_PUBLIC_BUILD ?? "devlocal",
+    NEXT_PUBLIC_BASE_PATH: enApk ? "" : "/pegaso",
+    NEXT_PUBLIC_ES_APK: enApk ? "1" : "0",
   },
 };
 

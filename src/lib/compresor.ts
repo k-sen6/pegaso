@@ -3,11 +3,17 @@
 // para que la subida posterior por señal móvil sea liviana.
 
 export interface FotoComprimida {
-  /** Versión que se enviará al servidor (máx 1280 px, WebP) */
+  /** Versión principal (máx 1280 px, WebP) para el detalle */
   blob: Blob;
+  /** Versión de tarjeta (máx 640 px, WebP) */
+  cardBlob: Blob;
+  /** Miniatura de red (máx 320 px, WebP) */
+  thumbBlob: Blob;
   /** Miniatura para la vista previa local (máx 480 px, JPEG dataURL) */
   miniatura: string;
   pesoBytes: number;
+  pesoCard: number;
+  pesoThumb: number;
   /** Tamaño del archivo original, para mostrar el ahorro */
   pesoOriginal: number;
   ancho: number;
@@ -15,6 +21,8 @@ export interface FotoComprimida {
 }
 
 const MAX_LADO = 1280;
+const MAX_CARD = 640;
+const MAX_THUMB = 320;
 const MAX_MINI = 480;
 
 interface Fuente {
@@ -99,6 +107,15 @@ function lienzoADataUrl(
   return lienzo.toDataURL(tipo, calidad);
 }
 
+async function blobWebp(
+  lienzo: HTMLCanvasElement,
+  calidad: number
+): Promise<Blob> {
+  return lienzoABlob(lienzo, "image/webp", calidad).catch(() =>
+    lienzoABlob(lienzo, "image/jpeg", Math.min(0.9, calidad + 0.07))
+  );
+}
+
 /**
  * Comprime un File de cámara/galería.
  * Lanza Error con mensaje en español si el formato no es imagen o no se puede leer.
@@ -111,16 +128,25 @@ export async function comprimirFoto(file: File): Promise<FotoComprimida> {
   const fuente = await decodificar(file);
   try {
     const lienzo = dibujarAjustado(fuente, MAX_LADO);
+    const card = dibujarAjustado(fuente, MAX_CARD);
+    const thumb = dibujarAjustado(fuente, MAX_THUMB);
     const mini = dibujarAjustado(fuente, MAX_MINI);
-    // WebP es lo ideal; si el navegador no puede codificarlo, usamos JPEG.
-    const blob = await lienzoABlob(lienzo, "image/webp", 0.75).catch(() =>
-      lienzoABlob(lienzo, "image/jpeg", 0.82)
-    );
+
+    const [blob, cardBlob, thumbBlob] = await Promise.all([
+      blobWebp(lienzo, 0.78),
+      blobWebp(card, 0.75),
+      blobWebp(thumb, 0.7),
+    ]);
     const miniatura = lienzoADataUrl(mini, "image/jpeg", 0.65);
+
     return {
       blob,
+      cardBlob,
+      thumbBlob,
       miniatura,
       pesoBytes: blob.size,
+      pesoCard: cardBlob.size,
+      pesoThumb: thumbBlob.size,
       pesoOriginal: file.size,
       ancho: lienzo.width,
       alto: lienzo.height,

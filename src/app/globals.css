@@ -303,3 +303,60 @@
     display: flex !important;
   }
 }
+
+/* === APK / app instalada: pantalla completa y áreas seguras === */
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  overscroll-behavior-y: none;
+}
+
+.es-apk .bottom-nav-app {
+  display: flex !important;
+}
+
+/* En la APK el WebView no reporta display-mode: standalone. */
+.es-apk body {
+  padding-top: env(safe-area-inset-top);
+}
+
+.es-apk .pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Respeta el notch y la barra de gestos en cabecera y navegación. */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .bottom-nav-app {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Toque tipo app: sin selección accidental en controles. */
+button,
+a,
+nav,
+header {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page-enter {
+    animation: page-in 260ms var(--ease-out-quart) both;
+  }
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

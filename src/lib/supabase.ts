@@ -45,6 +45,8 @@ export interface PegasoTypes {
         producto_id: string | null;
         nombre_producto: string;
         url: string | null;
+        thumb_url: string | null;
+        card_url: string | null;
         peso_bytes: number;
         ancho: number;
         alto: number;
@@ -69,8 +71,13 @@ export interface PegasoTypes {
   };
 }
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// Claves públicas de Supabase (la anon está diseñada para el cliente).
+const url =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ??
+  "https://guptzbnzkprdrgilrdrx.supabase.co";
+const anon =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1cHR6Ym56a3ByZHJnaWxyZHJ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQwMTc0NDcsImV4cCI6MjEwOTU5MzQ0N30.-lIwFwPSCOp77QiiemTJL8PlR6fPaa3ir4-T-GnSpiE";
 
 /** null sin backend configurado → la PWA sigue 100% offline con mocks. */
 export const supabase: SupabaseClient<PegasoTypes> | null =

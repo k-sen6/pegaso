@@ -1,45 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useRed } from "@/store/red";
 import { cn } from "cn";
 
-type Estado = "online" | "offline";
-
-/**
- * Iteración 1: online/offline real via eventos del navegador.
- * Iteración 5: añade "Sincronizando…" / "Todo sincronizado" con PowerSync.
- */
 export function ConnectionIndicator({ className }: { className?: string }) {
-  const [estado, setEstado] = useState<Estado>("online");
-  const [montado, setMontado] = useState(false);
-
-  useEffect(() => {
-    setMontado(true);
-    const f = (nuevo: Estado) => () => setEstado(nuevo);
-    window.addEventListener("online", f("online"));
-    window.addEventListener("offline", f("offline"));
-    setEstado(navigator.onLine ? "online" : "offline");
-    return () => {
-      window.removeEventListener("online", f("online"));
-      window.removeEventListener("offline", f("offline"));
-    };
-  }, []);
-
-  if (!montado) return null;
+  const online = useRed();
 
   return (
     <span
       role="status"
-      className={cn("inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs", className)}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs",
+        className
+      )}
     >
       <span
         aria-hidden="true"
         className={cn(
           "size-1.5 rounded-full",
-          estado === "online" ? "bg-success" : "bg-destructive"
+          online ? "bg-success" : "bg-warning"
         )}
       />
-      {estado === "online" ? "En línea" : "Sin conexión"}
+      {online ? "En línea" : "Sin conexión"}
     </span>
   );
 }
